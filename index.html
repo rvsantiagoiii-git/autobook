@@ -624,11 +624,60 @@
     </div>
   </div>
 
+  <!-- 9. Full-Screen Vehicle Photo Gallery Lightbox Modal -->
+  <div id="photoGalleryModal" class="fixed inset-0 z-50 hidden bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+    <div class="bg-slate-900 text-white rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden border border-slate-800 flex flex-col max-h-[92vh]">
+      <div class="px-4 sm:px-5 py-3.5 border-b border-slate-800 flex items-center justify-between gap-2 shrink-0">
+        <div>
+          <h3 id="galleryModalTitle" class="font-extrabold text-sm sm:text-base text-white">Vehicle Photos</h3>
+          <p id="galleryModalCounter" class="text-[11px] text-slate-400">Photo 1 of 1</p>
+        </div>
+        <button onclick="closeModal('photoGalleryModal')" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Main Stage Image -->
+      <div class="relative bg-black flex items-center justify-center min-h-[240px] sm:min-h-[380px] flex-1 overflow-hidden">
+        <img id="galleryMainImage" src="" alt="Vehicle Photo" class="max-h-[55vh] w-auto object-contain select-none" />
+        <button
+          type="button"
+          onclick="navigateGallery(-1)"
+          class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-white flex items-center justify-center shadow-lg transition"
+          title="Previous Photo"
+        >
+          <i data-lucide="chevron-left" class="w-5 h-5"></i>
+        </button>
+        <button
+          type="button"
+          onclick="navigateGallery(1)"
+          class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-white flex items-center justify-center shadow-lg transition"
+          title="Next Photo"
+        >
+          <i data-lucide="chevron-right" class="w-5 h-5"></i>
+        </button>
+        <div id="galleryAngleCaption" class="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-slate-950/80 border border-slate-700 text-[11px] font-semibold text-slate-200"></div>
+      </div>
+
+      <!-- Thumbnail Strip -->
+      <div id="galleryThumbStrip" class="p-3 bg-slate-950 border-t border-slate-800 flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0"></div>
+    </div>
+  </div>
+
   <!-- ===================================================================== -->
   <!-- JAVASCRIPT APPLICATION STATE & INTERACTIVE LOGIC                      -->
   <!-- ===================================================================== -->
   <script>
-    const STORAGE_KEY = 'autobook_v2_ph_production_prototype_v3';
+    const STORAGE_KEY = 'autobook_v2_ph_production_prototype_v4';
+    let pendingUploadBuffers = {
+      addCar: [],
+      lead: []
+    };
+    let activeGalleryState = {
+      title: '',
+      photos: [],
+      index: 0
+    };
 
     // Standardized 9-Item Philippine Used-Car Screening Checklist
     const CHECKLIST_ITEMS = [
@@ -708,6 +757,14 @@
       return `${yyyy}-${mm}-${dd}`;
     }
 
+    function getDaysBetweenDates(startDateStr, endDateStr = null) {
+      if (!startDateStr) return 0;
+      const start = new Date(startDateStr + 'T00:00:00');
+      const end = endDateStr ? new Date(endDateStr + 'T00:00:00') : new Date();
+      const diffMs = end.getTime() - start.getTime();
+      return Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)));
+    }
+
     function formatPHP(amount) {
       const num = Number(amount) || 0;
       return '₱' + num.toLocaleString('en-PH', { maximumFractionDigits: 0 });
@@ -736,6 +793,171 @@
       return `${h12}:${mm} ${period}`;
     }
 
+    // Generate clean multi-angle preview cards for sample vehicles (fallback when real photos aren't uploaded yet)
+    function createSampleVehiclePhotos(year, make, model, colorName, category) {
+      const lower = (colorName || '').toLowerCase();
+      let bgHex = '1e293b';
+      if (lower.includes('white') || lower.includes('pearl')) bgHex = '334155';
+      else if (lower.includes('silver')) bgHex = '475569';
+      else if (lower.includes('red')) bgHex = '7f1d1d';
+
+      const titleText = encodeURIComponent(`${year} ${make} ${model}`);
+      return [
+        {
+          label: 'Front 3/4 Exterior',
+          url: `https://placehold.co/800x500/${bgHex}/f8fafc?text=${titleText}+%E2%80%A2+Front+3%2F4`
+        },
+        {
+          label: 'Interior & Dashboard',
+          url: `https://placehold.co/800x500/0f172a/34d399?text=${encodeURIComponent(make + ' ' + model)}+%E2%80%A2+Interior+%26+Cabin`
+        },
+        {
+          label: 'Engine Bay & Odometer',
+          url: `https://placehold.co/800x500/1e1b4b/c7d2fe?text=${encodeURIComponent(category)}+%E2%80%A2+Engine+%26+Odometer`
+        }
+      ];
+    }
+
+    // Client-side image compression (max 900px width, JPEG 0.78) so uploaded photos persist cleanly in localStorage
+    function compressImageFileToDataURL(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const img = new Image();
+          img.onload = () => {
+            const maxW = 900;
+            const scale = img.width > maxW ? maxW / img.width : 1;
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', 0.78));
+          };
+          img.onerror = reject;
+          img.src = ev.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handlePhotoFilesSelected(prefix, fileList) {
+      const files = Array.from(fileList || []);
+      if (files.length === 0) return;
+
+      const remainingSlots = Math.max(0, 6 - pendingUploadBuffers[prefix].length);
+      const batch = files.slice(0, remainingSlots);
+
+      for (const file of batch) {
+        try {
+          const compressedUrl = await compressImageFileToDataURL(file);
+          const cleanName = file.name.replace(/\.[^/.]+$/, '').slice(0, 26) || 'Vehicle Photo';
+          pendingUploadBuffers[prefix].push({
+            label: cleanName,
+            url: compressedUrl
+          });
+        } catch (err) {
+          console.warn('Photo compression skipped:', err);
+        }
+      }
+      renderPhotoUploadPreviewStrip(prefix);
+    }
+
+    function removePendingPhoto(prefix, idx) {
+      pendingUploadBuffers[prefix].splice(idx, 1);
+      renderPhotoUploadPreviewStrip(prefix);
+    }
+
+    function renderPhotoUploadPreviewStrip(prefix) {
+      const stripEl = document.getElementById(`${prefix}PhotoPreviewStrip`);
+      const countEl = document.getElementById(`${prefix}PhotoCountLabel`);
+      if (!stripEl) return;
+
+      const list = pendingUploadBuffers[prefix] || [];
+      if (countEl) {
+        countEl.textContent = `${list.length}/6 photo(s) attached`;
+      }
+
+      if (list.length === 0) {
+        stripEl.innerHTML = `
+          <div class="col-span-full text-[11px] text-slate-400 italic py-1">
+            No photos selected yet. Upload front, side, interior, odometer, or OR/CR photos (up to 6).
+          </div>
+        `;
+        return;
+      }
+
+      stripEl.innerHTML = list.map((p, idx) => `
+        <div class="relative group rounded-xl overflow-hidden border border-slate-300 bg-slate-100 aspect-[16/10]">
+          <img src="${p.url}" alt="${p.label}" class="w-full h-full object-cover" />
+          <span class="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-slate-950/75 text-[9px] font-bold text-white truncate max-w-[80%]">
+            ${idx === 0 ? 'Cover' : p.label}
+          </span>
+          <button
+            type="button"
+            onclick="removePendingPhoto('${prefix}', ${idx})"
+            title="Remove photo"
+            class="absolute top-1 right-1 w-5 h-5 rounded-full bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center shadow"
+          >✕</button>
+        </div>
+      `).join('');
+    }
+
+    function openEntityPhotoGallery(entityType, entityId, startIndex = 0) {
+      const collection = entityType === 'lead' ? state.leads : state.cars;
+      const item = collection.find(x => x.id === entityId);
+      if (!item) return;
+
+      const photos = (item.photos && item.photos.length > 0)
+        ? item.photos
+        : createSampleVehiclePhotos(item.year, item.make, item.model, item.color || 'Stock', item.category);
+
+      activeGalleryState = {
+        title: `${item.year} ${item.make} ${item.model}`,
+        photos,
+        index: Math.max(0, Math.min(photos.length - 1, startIndex))
+      };
+
+      updateGalleryModalUI();
+      openModal('photoGalleryModal');
+    }
+
+    function navigateGallery(step) {
+      const total = activeGalleryState.photos.length;
+      if (total <= 1) return;
+      activeGalleryState.index = (activeGalleryState.index + step + total) % total;
+      updateGalleryModalUI();
+    }
+
+    function selectGalleryIndex(idx) {
+      activeGalleryState.index = idx;
+      updateGalleryModalUI();
+    }
+
+    function updateGalleryModalUI() {
+      const { title, photos, index } = activeGalleryState;
+      const current = photos[index];
+      if (!current) return;
+
+      document.getElementById('galleryModalTitle').textContent = title;
+      document.getElementById('galleryModalCounter').textContent = `Photo ${index + 1} of ${photos.length}`;
+      document.getElementById('galleryMainImage').src = current.url;
+      document.getElementById('galleryAngleCaption').textContent = current.label || `Photo ${index + 1}`;
+
+      document.getElementById('galleryThumbStrip').innerHTML = photos.map((p, idx) => `
+        <button
+          type="button"
+          onclick="selectGalleryIndex(${idx})"
+          class="relative rounded-lg overflow-hidden border-2 shrink-0 w-20 h-14 transition ${
+            idx === index ? 'border-emerald-400 scale-105' : 'border-slate-700 opacity-65 hover:opacity-100'
+          }"
+        >
+          <img src="${p.url}" alt="${p.label}" class="w-full h-full object-cover" />
+        </button>
+      `).join('');
+    }
+
     // Initial Seed Data matching exact specification
     function createDefaultState() {
       const today = getDateOffsetStr(0);
@@ -746,6 +968,7 @@
         activeTab: 'cars',
         statusFilter: 'All',
         categoryFilter: 'All',
+        analyticsRange: 'ALL', // '7D' | '30D' | 'ALL'
         calendarCarId: 'car_montero_2021',
         calendarDateFilter: today,
         commissionRate: 2.0, // Default 2.0% (constrained 1.0% - 3.0%)
@@ -763,7 +986,10 @@
             basePrice: 465000,
             unitFlatFee: 10000,
             status: 'Available',
+            listedAt: getDateOffsetStr(-12),
+            soldAt: null,
             documentStatus: 'Complete OR/CR',
+            photos: createSampleVehiclePhotos(2020, 'Toyota', 'Vios 1.3 XLE CVT', 'White', 'Sedan / Hatchback'),
             checklistItems: [
               'orig_or_cr',
               'clear_encumbrance',
@@ -793,7 +1019,10 @@
             basePrice: 1120000,
             unitFlatFee: 22000,
             status: 'Under Viewing',
+            listedAt: getDateOffsetStr(-6),
+            soldAt: null,
             documentStatus: 'Complete OR/CR',
+            photos: createSampleVehiclePhotos(2021, 'Mitsubishi', 'Montero Sport GLS 2.4D AT', 'Silver', 'SUV / Pickup'),
             checklistItems: [
               'orig_or_cr',
               'clear_encumbrance',
@@ -823,7 +1052,10 @@
             basePrice: 680000,
             unitFlatFee: 12000,
             status: 'Reserved',
+            listedAt: getDateOffsetStr(-19),
+            soldAt: null,
             documentStatus: 'Open Deed of Sale',
+            photos: createSampleVehiclePhotos(2019, 'Honda', 'Civic 1.8 E CVT', 'Red', 'Sedan / Hatchback'),
             checklistItems: [
               'orig_or_cr',
               'clear_encumbrance',
@@ -858,7 +1090,10 @@
             basePrice: 3450000,
             unitFlatFee: 40000,
             status: 'Available',
+            listedAt: getDateOffsetStr(-3),
+            soldAt: null,
             documentStatus: 'Complete OR/CR',
+            photos: createSampleVehiclePhotos(2022, 'Toyota', 'Land Cruiser Prado 2.8D AT', 'Pearl White', 'Luxury ₱2M+'),
             checklistItems: [
               'orig_or_cr',
               'clear_encumbrance',
@@ -912,7 +1147,9 @@
             agentPayout: 13700, // 2.0% of ₱685,000
             privatePatong: null,
             status: 'PENDING',
-            submittedAt: 'Today, 11:30 AM'
+            submittedAt: 'Today, 11:30 AM',
+            decidedDate: null,
+            daysToSell: 19
           },
           {
             id: 'sale_approved_markup',
@@ -925,7 +1162,9 @@
             agentPayout: 0, // Owner owes ₱0; agent kept private spread
             privatePatong: 28000, // Visible ONLY to Jomar Santos
             status: 'APPROVED',
-            submittedAt: '2 days ago'
+            submittedAt: '2 days ago',
+            decidedDate: getDateOffsetStr(-2),
+            daysToSell: 11
           },
           {
             id: 'sale_approved_comm',
@@ -938,7 +1177,9 @@
             agentPayout: 19200, // 2.0% of ₱960,000
             privatePatong: null,
             status: 'APPROVED',
-            submittedAt: '4 days ago'
+            submittedAt: '4 days ago',
+            decidedDate: getDateOffsetStr(-4),
+            daysToSell: 16
           }
         ],
         leads: [
@@ -954,6 +1195,7 @@
             sellerName: 'Mr. Enriquez',
             sellerPhone: '0917-842-1190',
             location: 'Makati',
+            photos: createSampleVehiclePhotos(2021, 'Toyota', 'Fortuner 2.4 G Diesel AT', 'Silver', 'SUV / Pickup'),
             checklistItems: [
               'orig_or_cr',
               'clear_encumbrance',
@@ -1186,6 +1428,43 @@
       if (user.role === 'OWNER') return false;
       if (car.sourcedByAgentId === user.id) return false;
       return new Date(car.priorityUntil).getTime() > Date.now();
+    }
+
+    // =========================================================================
+    // MULTI-PHOTO UPLOAD WIDGET RENDERER (USED IN ADD CAR & CAR LEAD FORMS)
+    // =========================================================================
+    function renderPhotoUploadBox(prefix, titleText = 'Vehicle Photos (Exterior, Interior, Odometer & OR/CR)') {
+      return `
+        <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-3.5 space-y-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h4 class="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
+                <i data-lucide="camera" class="w-4 h-4 text-indigo-600"></i>
+                <span>${titleText}</span>
+              </h4>
+              <p class="text-[11px] text-slate-500 mt-0.5">Helps agents preview actual unit look and share photos with buyers</p>
+            </div>
+            <span id="${prefix}PhotoCountLabel" class="text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md">
+              ${(pendingUploadBuffers[prefix] || []).length}/6 photo(s) attached
+            </span>
+          </div>
+
+          <label class="cursor-pointer flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-slate-300 hover:border-indigo-400 bg-white px-4 py-3 text-center transition">
+            <i data-lucide="image-plus" class="w-5 h-5 text-indigo-600"></i>
+            <span class="text-xs font-bold text-slate-800">Tap to Select or Snap Vehicle Photos</span>
+            <span class="text-[10px] text-slate-400">JPG / PNG / WEBP • Auto-compressed for fast mobile loading</span>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onchange="handlePhotoFilesSelected('${prefix}', this.files); this.value='';"
+              class="hidden"
+            />
+          </label>
+
+          <div id="${prefix}PhotoPreviewStrip" class="grid grid-cols-3 gap-2"></div>
+        </div>
+      `;
     }
 
     // =========================================================================
@@ -1465,11 +1744,15 @@
     }
 
     function openAddCarModal() {
+      pendingUploadBuffers.addCar = [];
       const rateLabel = document.getElementById('newCarCommRateLabel');
       if (rateLabel) rateLabel.textContent = `${state.commissionRate.toFixed(1)}%`;
       const container = document.getElementById('addCarChecklistContainer');
       if (container) {
-        container.innerHTML = renderChecklistFormSection('addCar', []);
+        container.innerHTML =
+          renderPhotoUploadBox('addCar', 'Upload Vehicle Photos (Front, Side, Interior, Odometer)') +
+          renderChecklistFormSection('addCar', []);
+        renderPhotoUploadPreviewStrip('addCar');
       }
       openModal('addCarModal');
     }
@@ -1478,20 +1761,32 @@
       e.preventDefault();
       const checkedItems = getCheckedChecklistIds('addCar');
       const otherIssues = (document.getElementById('addCarOtherIssuesInput')?.value || '').trim();
+      const year = parseInt(document.getElementById('newCarYear').value, 10);
+      const make = document.getElementById('newCarMake').value.trim();
+      const model = document.getElementById('newCarModel').value.trim();
+      const category = document.getElementById('newCarCategory').value;
+      const color = document.getElementById('newCarColor').value.trim();
+
+      const uploadedPhotos = pendingUploadBuffers.addCar.length > 0
+        ? [...pendingUploadBuffers.addCar]
+        : createSampleVehiclePhotos(year, make, model, color, category);
 
       const newCar = {
         id: 'car_' + Date.now(),
-        year: parseInt(document.getElementById('newCarYear').value, 10),
-        make: document.getElementById('newCarMake').value.trim(),
-        model: document.getElementById('newCarModel').value.trim(),
-        category: document.getElementById('newCarCategory').value,
+        year,
+        make,
+        model,
+        category,
         mileage: parseInt(document.getElementById('newCarMileage').value, 10),
-        color: document.getElementById('newCarColor').value.trim(),
+        color,
         transmission: document.getElementById('newCarTrans').value,
         fuelType: document.getElementById('newCarFuel').value,
         basePrice: parseInt(document.getElementById('newCarBasePrice').value, 10),
         status: 'Available',
+        listedAt: getDateOffsetStr(0),
+        soldAt: null,
         documentStatus: document.getElementById('newCarDocs').value,
+        photos: uploadedPhotos,
         checklistItems: checkedItems,
         otherIssuesNotes: otherIssues || 'Ready for agent viewing.',
         sourcedByAgentId: null,
@@ -1500,13 +1795,14 @@
       };
 
       state.cars.unshift(newCar);
+      pendingUploadBuffers.addCar = [];
       saveState();
       closeModal('addCarModal');
       e.target.reset();
 
       broadcastSocketEvent(
         'NEW_INVENTORY_LIVE',
-        `Owner added ${newCar.year} ${newCar.make} ${newCar.model} (${checkedItems.length}/9 checklist verified • Base: ${formatPHP(newCar.basePrice)}).`,
+        `Owner added ${newCar.year} ${newCar.make} ${newCar.model} (${uploadedPhotos.length} photo(s) • ${checkedItems.length}/9 verified • Base: ${formatPHP(newCar.basePrice)}).`,
         'emerald'
       );
       renderApp();
@@ -1782,7 +2078,9 @@
         agentPayout,
         privatePatong,
         status: 'PENDING',
-        submittedAt: 'Just now'
+        submittedAt: 'Just now',
+        decidedDate: null,
+        daysToSell: getDaysBetweenDates(car.listedAt || getDateOffsetStr(0))
       });
 
       saveState();
@@ -1808,7 +2106,12 @@
 
       if (decision === 'APPROVED') {
         sale.status = 'APPROVED';
-        if (car) car.status = 'Sold';
+        sale.decidedDate = getDateOffsetStr(0);
+        if (car) {
+          car.status = 'Sold';
+          car.soldAt = getDateOffsetStr(0);
+          sale.daysToSell = getDaysBetweenDates(car.listedAt || getDateOffsetStr(0), car.soldAt);
+        }
         broadcastSocketEvent(
           'SALE_APPROVED_PAID',
           `Owner verified Base Price remittance for ${sale.carTitle}. Unit marked SOLD & payout credited to ${agent?.name || 'Agent'}.`,
@@ -1827,6 +2130,68 @@
     }
 
     // =========================================================================
+    // OWNER ANALYTICS & TURNOVER BI HELPERS
+    // =========================================================================
+    function setAnalyticsRange(rangeKey) {
+      state.analyticsRange = rangeKey;
+      saveState();
+      renderApp();
+    }
+
+    function isWithinAnalyticsRange(dateStr, rangeKey) {
+      if (rangeKey === 'ALL' || !dateStr) return true;
+      const daysAgo = getDaysBetweenDates(dateStr);
+      if (rangeKey === '7D') return daysAgo <= 7;
+      if (rangeKey === '30D') return daysAgo <= 30;
+      return true;
+    }
+
+    function exportSalesLedgerCSV() {
+      const headers = [
+        'Sale ID',
+        'Vehicle',
+        'Agent',
+        'Payout Model',
+        'Base Price Remitted (PHP)',
+        'Reported Sale Price (PHP)',
+        'Agent Payout (PHP)',
+        'Days to Sell',
+        'Status',
+        'Submitted / Decided'
+      ];
+
+      const rows = state.sales.map(s => {
+        const agentName = USERS[s.agentId]?.name || s.agentId;
+        const reported = s.payoutModel === 'MARKUP' ? 'Private (Patong)' : (s.reportedSalePrice || s.basePriceSnapshot);
+        return [
+          s.id,
+          `"${(s.carTitle || '').replace(/"/g, '""')}"`,
+          `"${agentName}"`,
+          s.payoutModel,
+          s.basePriceSnapshot || 0,
+          reported,
+          s.agentPayout || 0,
+          s.daysToSell || '—',
+          s.status,
+          `"${s.decidedDate || s.submittedAt || ''}"`
+        ].join(',');
+      });
+
+      const csvContent = [headers.join(','), ...rows].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `AutoBook_Sales_BI_Ledger_${getDateOffsetStr(0)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      broadcastSocketEvent('CSV_EXPORTED', 'Downloaded Owner Sales & Turnover BI Ledger (.csv).', 'indigo');
+    }
+
+    // =========================================================================
     // TAB 4 ACTIONS: CAR SOURCING & FINDER'S FEES
     // =========================================================================
     function handleLeadSubmit(e) {
@@ -1834,19 +2199,28 @@
       const user = getCurrentUser();
       const checkedItems = getCheckedChecklistIds('lead');
       const otherIssues = (document.getElementById('leadOtherIssuesInput')?.value || '').trim();
+      const year = parseInt(document.getElementById('leadYearInput').value, 10);
+      const make = document.getElementById('leadMakeInput').value.trim();
+      const model = document.getElementById('leadModelInput').value.trim();
+      const category = document.getElementById('leadCategorySelect').value;
+
+      const leadPhotos = pendingUploadBuffers.lead.length > 0
+        ? [...pendingUploadBuffers.lead]
+        : createSampleVehiclePhotos(year, make, model, 'Stock', category);
 
       const lead = {
         id: 'lead_' + Date.now(),
         agentId: user.id,
-        year: parseInt(document.getElementById('leadYearInput').value, 10),
-        make: document.getElementById('leadMakeInput').value.trim(),
-        model: document.getElementById('leadModelInput').value.trim(),
-        category: document.getElementById('leadCategorySelect').value,
+        year,
+        make,
+        model,
+        category,
         mileage: parseInt(document.getElementById('leadMileageInput').value, 10),
         askingPrice: parseInt(document.getElementById('leadAskingInput').value, 10),
         sellerName: document.getElementById('leadSellerNameInput').value.trim(),
         sellerPhone: document.getElementById('leadSellerPhoneInput').value.trim(),
         location: document.getElementById('leadLocationInput').value.trim(),
+        photos: leadPhotos,
         checklistItems: checkedItems,
         otherIssuesNotes: otherIssues,
         status: 'SUBMITTED',
@@ -1855,12 +2229,13 @@
       };
 
       state.leads.unshift(lead);
+      pendingUploadBuffers.lead = [];
       saveState();
       e.target.reset();
 
       broadcastSocketEvent(
         'CAR_LEAD_SUBMITTED',
-        `${user.name} submitted off-market lead: ${lead.year} ${lead.make} ${lead.model} (${checkedItems.length}/9 verified • ${lead.location}).`,
+        `${user.name} submitted off-market lead: ${lead.year} ${lead.make} ${lead.model} (${leadPhotos.length} photo(s) • ${checkedItems.length}/9 verified • ${lead.location}).`,
         'indigo'
       );
       renderApp();
@@ -1915,7 +2290,12 @@
         fuelType: 'Diesel',
         basePrice,
         status: 'Available',
+        listedAt: getDateOffsetStr(0),
+        soldAt: null,
         documentStatus: (lead.checklistItems || []).includes('orig_or_cr') ? 'Complete OR/CR' : 'Pending Document Verification',
+        photos: lead.photos && lead.photos.length > 0
+          ? [...lead.photos]
+          : createSampleVehiclePhotos(lead.year, lead.make, lead.model, 'Stock', lead.category),
         checklistItems: [...(lead.checklistItems || [])],
         otherIssuesNotes: inheritedNotes,
         sourcedByAgentId: lead.agentId,
@@ -2095,34 +2475,95 @@
                 return `
                   <div class="bg-white rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition overflow-hidden flex flex-col justify-between">
                     <div>
-                      <!-- Top Visual & Badges -->
-                      <div class="bg-gradient-to-b from-slate-100 to-slate-50 px-4 pt-3.5 pb-2 border-b border-slate-100">
-                        <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
-                          <div class="flex items-center gap-1.5">
-                            ${getStatusPillHTML(car.status)}
-                            ${getCategoryPillHTML(car.category)}
-                          </div>
-                          <span class="text-[11px] font-semibold text-slate-600 bg-white px-2 py-0.5 rounded-md border border-slate-200">
-                            ${car.documentStatus}
-                          </span>
-                        </div>
+                      <!-- Top Vehicle Photo Stage & Badges -->
+                      <div class="relative bg-slate-900">
+                        ${(() => {
+                          const photos = (car.photos && car.photos.length > 0)
+                            ? car.photos
+                            : createSampleVehiclePhotos(car.year, car.make, car.model, car.color, car.category);
+                          const cover = photos[0];
+                          return `
+                            <div onclick="openEntityPhotoGallery('car', '${car.id}', 0)" class="cursor-pointer group relative h-48 sm:h-52 w-full overflow-hidden bg-slate-900">
+                              <img
+                                src="${cover.url}"
+                                alt="${car.year} ${car.make} ${car.model}"
+                                onerror="this.src='https://placehold.co/800x500/1e293b/f8fafc?text=${encodeURIComponent(car.year + ' ' + car.make + ' ' + car.model)}'"
+                                class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                              />
+                              <div class="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-transparent to-slate-950/35"></div>
 
-                        ${getCarArtworkSVG(car.category, car.color)}
+                              <!-- Top-Left Status & Category -->
+                              <div class="absolute top-3 left-3 flex flex-wrap items-center gap-1.5">
+                                ${getStatusPillHTML(car.status)}
+                                ${getCategoryPillHTML(car.category)}
+                              </div>
 
-                        ${scout ? `
-                          <div class="mt-1 flex flex-wrap items-center gap-1.5">
-                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-indigo-600 text-white text-[11px] font-bold shadow-2xs">
-                              <i data-lucide="award" class="w-3 h-3"></i>
-                              <span>Found by ${scout.name} • 48h Priority</span>
-                            </span>
-                          </div>
-                        ` : ''}
+                              <!-- Top-Right Document Pill -->
+                              <span class="absolute top-3 right-3 text-[11px] font-semibold text-slate-800 bg-white/95 backdrop-blur-xs px-2 py-0.5 rounded-md shadow-xs">
+                                ${car.documentStatus}
+                              </span>
+
+                              <!-- Bottom-Left Scout Badge -->
+                              ${scout ? `
+                                <div class="absolute bottom-3 left-3">
+                                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-indigo-600 text-white text-[11px] font-bold shadow">
+                                    <i data-lucide="award" class="w-3 h-3"></i>
+                                    <span>Found by ${scout.name} • 48h Priority</span>
+                                  </span>
+                                </div>
+                              ` : ''}
+
+                              <!-- Bottom-Right Photo Counter Button -->
+                              <button
+                                type="button"
+                                onclick="event.stopPropagation(); openEntityPhotoGallery('car', '${car.id}', 0)"
+                                class="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950/85 hover:bg-slate-900 border border-white/20 text-white text-[11px] font-bold shadow transition"
+                              >
+                                <i data-lucide="images" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                <span>${photos.length} Photo${photos.length > 1 ? 's' : ''}</span>
+                              </button>
+                            </div>
+
+                            <!-- Quick Thumbnail Strip -->
+                            ${photos.length > 1 ? `
+                              <div class="px-3 py-2 bg-slate-50 border-b border-slate-200/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                                ${photos.map((p, idx) => `
+                                  <button
+                                    type="button"
+                                    onclick="openEntityPhotoGallery('car', '${car.id}', ${idx})"
+                                    class="relative rounded-lg overflow-hidden border border-slate-300 hover:border-indigo-500 w-14 h-10 shrink-0 transition"
+                                    title="${p.label || 'Photo ' + (idx + 1)}"
+                                  >
+                                    <img src="${p.url}" alt="${p.label}" class="w-full h-full object-cover" />
+                                  </button>
+                                `).join('')}
+                                <span class="text-[10px] text-slate-400 font-medium pl-1 whitespace-nowrap">Tap any photo to inspect</span>
+                              </div>
+                            ` : ''}
+                          `;
+                        })()}
                       </div>
 
                       <!-- Main Card Details -->
                       <div class="p-4 space-y-3">
                         <div>
-                          <h3 class="font-extrabold text-base sm:text-lg text-slate-900 leading-snug">${car.year} ${car.make} ${car.model}</h3>
+                          <div class="flex flex-wrap items-center justify-between gap-2">
+                            <h3 class="font-extrabold text-base sm:text-lg text-slate-900 leading-snug">${car.year} ${car.make} ${car.model}</h3>
+                            ${(() => {
+                              const daysOnLot = getDaysBetweenDates(car.listedAt, car.soldAt);
+                              const agingClass = car.status === 'Sold'
+                                ? 'bg-slate-100 text-slate-600 border-slate-200'
+                                : (daysOnLot >= 15
+                                    ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                    : 'bg-sky-50 text-sky-800 border-sky-200');
+                              return `
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[11px] font-bold ${agingClass}">
+                                  <i data-lucide="clock" class="w-3 h-3"></i>
+                                  <span>${car.status === 'Sold' ? `Sold in ${daysOnLot}d` : `${daysOnLot}d on lot`}</span>
+                                </span>
+                              `;
+                            })()}
+                          </div>
                           <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500 mt-1">
                             <span class="font-medium text-slate-700">${car.mileage.toLocaleString()} km</span>
                             <span>•</span>
@@ -2233,245 +2674,60 @@
     }
 
     // -------------------------------------------------------------------------
-    // TAB 2: PER-CAR VIEWING CALENDAR
-    // -------------------------------------------------------------------------
-    function renderCalendarView() {
-      const user = getCurrentUser();
-      const isOwner = user.role === 'OWNER';
-      const todayStr = getDateOffsetStr(0);
-
-      const selectedCar = state.cars.find(c => c.id === state.calendarCarId) || state.cars[0];
-      const carBookings = state.bookings
-        .filter(b => b.carId === selectedCar?.id)
-        .sort((a, b) => {
-          if (a.date !== b.date) return a.date.localeCompare(b.date);
-          return timeToMinutes(a.startTime) - timeToMinutes(b.startTime);
-        });
-
-      const allConfirmedToday = state.bookings.filter(b => b.date === todayStr && b.status === 'CONFIRMED');
-
-      return `
-        <div class="space-y-6">
-          <div>
-            <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Per-Car Viewing Calendar</h1>
-            <p class="text-xs sm:text-sm text-slate-500">
-              Open time slots <strong class="text-emerald-700">auto-lock immediately</strong> with conflict protection. Rival agents' buyer leads stay masked.
-            </p>
-          </div>
-
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <!-- Left 5 Cols: Instant Conflict-Free Auto-Lock Booking Form -->
-            <div id="bookingFormSection" class="lg:col-span-5">
-              <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-                <div class="px-5 py-4 bg-slate-900 text-white">
-                  <div class="flex items-center gap-2">
-                    <i data-lucide="calendar-check" class="w-5 h-5 text-emerald-400"></i>
-                    <h2 class="font-bold text-base">Book Viewing Slot (Auto-Lock)</h2>
-                  </div>
-                  <p class="text-xs text-slate-300 mt-0.5">Instant conflict detection • Zero owner approval delay</p>
-                </div>
-
-                <form onsubmit="handleCreateBooking(event)" class="p-5 space-y-4">
-                  <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Select Vehicle</label>
-                    <select
-                      id="calCarSelect"
-                      onchange="onCalendarCarSelectChange(this.value)"
-                      class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm font-semibold text-slate-900"
-                    >
-                      ${state.cars.map(c =>
-                        `<option value="${c.id}" ${c.id === selectedCar?.id ? 'selected' : ''}>${c.year} ${c.make} ${c.model} (${c.status})</option>`
-                      ).join('')}
-                    </select>
-                  </div>
-
-                  <div class="grid grid-cols-2 gap-3">
-                    <div>
-                      <label class="block text-xs font-bold text-slate-700 mb-1">Viewing Date</label>
-                      <input
-                        type="date"
-                        id="calDateInput"
-                        value="${state.calendarDateFilter || todayStr}"
-                        onchange="onCalendarDateFilterChange(this.value)"
-                        required
-                        class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label class="block text-xs font-bold text-slate-700 mb-1">Start Time</label>
-                      <input
-                        type="time"
-                        id="calStartTimeInput"
-                        value="14:00"
-                        required
-                        class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm font-semibold"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Duration</label>
-                    <select id="calDurationSelect" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm">
-                      <option value="30">30 mins</option>
-                      <option value="60" selected>1 hour (Default)</option>
-                      <option value="90">1.5 hours</option>
-                      <option value="120">2 hours</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">
-                      Buyer Identifier <span class="text-slate-400 font-normal">(e.g., Paolo R. - 8821)</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="calBuyerInput"
-                      placeholder="Paolo R. - 8821"
-                      required
-                      class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500"
-                    />
-                    <p class="text-[11px] text-slate-500 mt-1">
-                      🔒 Masked from other agents as <code class="bg-slate-100 px-1 rounded">Masked (Protected Lead)</code>.
-                    </p>
-                  </div>
-
-                  <!-- Conflict Warning & Auto-Suggestion Box -->
-                  <div id="calConflictAlert" class="hidden p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-900 space-y-2.5">
-                    <div class="flex items-start gap-2 font-bold text-rose-800">
-                      <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 mt-0.5"></i>
-                      <span id="calConflictMessage"></span>
-                    </div>
-                    <button
-                      type="button"
-                      id="calApplySuggestionBtn"
-                      class="hidden w-full py-2 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition shadow-2xs"
-                    >
-                      Apply Suggested Open Slot
-                    </button>
-                  </div>
-
-                  <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-sm transition">
-                    Auto-Lock Viewing Slot
-                  </button>
-                </form>
-              </div>
-            </div>
-
-            <!-- Right 7 Cols: Selected Unit Schedule + Dealership Today Overview -->
-            <div class="lg:col-span-7 space-y-5">
-              <!-- Selected Car Schedule -->
-              <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-                <div class="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 bg-slate-50/70">
-                  <div>
-                    <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-600">Selected Unit Schedule</div>
-                    <h3 class="font-extrabold text-base text-slate-900">
-                      ${selectedCar ? `${selectedCar.year} ${selectedCar.make} ${selectedCar.model}` : 'Vehicle'}
-                    </h3>
-                  </div>
-                  ${selectedCar ? getStatusPillHTML(selectedCar.status) : ''}
-                </div>
-
-                <div class="p-4 space-y-3">
-                  ${carBookings.length === 0 ? `
-                    <div class="text-center py-8 text-xs text-slate-500">
-                      No viewings scheduled yet for this unit. Any time slot is currently wide open!
-                    </div>
-                  ` : carBookings.map(bk => {
-                    const agent = USERS[bk.agentId];
-                    const endTime = addMinutesToTime(bk.startTime, bk.durationMins);
-                    const canSeeBuyer = isOwner || bk.agentId === user.id;
-                    const isConfirmed = bk.status === 'CONFIRMED';
-
-                    return `
-                      <div class="p-3.5 rounded-xl border ${isConfirmed ? 'border-slate-200 bg-white' : 'border-rose-200 bg-rose-50/40'} flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div class="flex items-start gap-3">
-                          <div class="px-3 py-2 rounded-xl ${isConfirmed ? 'bg-indigo-50 border border-indigo-200 text-indigo-950' : 'bg-rose-100 border border-rose-200 text-rose-900'} text-center min-w-[106px] shrink-0">
-                            <div class="text-[10px] font-extrabold uppercase">${bk.date === todayStr ? 'Today' : bk.date}</div>
-                            <div class="text-xs font-extrabold mt-0.5">${formatTime12h(bk.startTime)}</div>
-                            <div class="text-[10px] opacity-75">– ${formatTime12h(endTime)}</div>
-                          </div>
-
-                          <div class="space-y-1">
-                            <div class="flex flex-wrap items-center gap-2">
-                              <span class="font-extrabold text-xs sm:text-sm text-slate-900">${agent?.name || 'Agent'}</span>
-                              ${isConfirmed
-                                ? `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">LOCKED</span>`
-                                : `<span class="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-extrabold">OVERRIDDEN</span>`
-                              }
-                            </div>
-                            <div class="text-xs">
-                              ${canSeeBuyer
-                                ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-900 font-semibold">Buyer: ${bk.buyerIdentifier}</span>`
-                                : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 text-slate-500 font-medium italic">🔒 Masked (Protected Lead)</span>`
-                              }
-                            </div>
-                            ${!isConfirmed && bk.overrideReason ? `
-                              <div class="text-[11px] text-rose-700 font-medium">Reason: ${bk.overrideReason}</div>
-                            ` : ''}
-                          </div>
-                        </div>
-
-                        ${isOwner && isConfirmed ? `
-                          <button
-                            onclick="openOverrideModal('${bk.id}')"
-                            class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-bold transition self-end sm:self-center shrink-0"
-                          >
-                            Override / Cancel
-                          </button>
-                        ` : ''}
-                      </div>
-                    `;
-                  }).join('')}
-                </div>
-              </div>
-
-              <!-- Dealership-Wide Today's Activity Feed -->
-              <div class="bg-white rounded-2xl border border-slate-200 p-4 space-y-2.5">
-                <div class="flex items-center justify-between">
-                  <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-600">All Dealership Viewings Today (${allConfirmedToday.length})</h4>
-                  <span class="text-[11px] text-slate-400">${todayStr}</span>
-                </div>
-                <div class="divide-y divide-slate-100 text-xs">
-                  ${allConfirmedToday.map(bk => {
-                    const c = state.cars.find(x => x.id === bk.carId);
-                    const ag = USERS[bk.agentId];
-                    const canSee = isOwner || bk.agentId === user.id;
-                    return `
-                      <div class="py-2.5 flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                          <span class="font-bold text-slate-900">${c ? `${c.year} ${c.make} ${c.model}` : 'Unit'}</span>
-                          <span class="text-slate-500"> • ${ag?.name} (${canSee ? bk.buyerIdentifier : 'Masked (Protected Lead)'})</span>
-                        </div>
-                        <span class="font-bold text-indigo-700">${formatTime12h(bk.startTime)} – ${formatTime12h(addMinutesToTime(bk.startTime, bk.durationMins))}</span>
-                      </div>
-                    `;
-                  }).join('')}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    // -------------------------------------------------------------------------
-    // TAB 3: SALES & PAYOUTS
+    // TAB 3: SALES & OWNER ANALYTICS BI
     // -------------------------------------------------------------------------
     function renderSalesView() {
       const user = getCurrentUser();
       const isOwner = user.role === 'OWNER';
+      const rangeKey = state.analyticsRange || 'ALL';
 
-      const approvedSales = state.sales.filter(s => s.status === 'APPROVED');
+      const allApprovedSales = state.sales.filter(s => s.status === 'APPROVED');
+      const approvedSales = allApprovedSales.filter(s => isWithinAnalyticsRange(s.decidedDate || getDateOffsetStr(0), rangeKey));
       const pendingSales = state.sales.filter(s => s.status === 'PENDING');
 
-      // KPI Calculations
+      // Financial KPI Calculations
       const totalRemitted = approvedSales.reduce((sum, s) => sum + Number(s.basePriceSnapshot || 0), 0);
       const totalPayoutsOut = approvedSales.reduce((sum, s) => sum + Number(s.agentPayout || 0), 0);
       const totalFindersOut = state.leads.filter(l => l.status === 'ACQUIRED').reduce((sum, l) => sum + Number(l.findersFee || 0), 0);
       const netOwnerRevenue = totalRemitted - totalPayoutsOut - totalFindersOut;
 
-      // Agent KPI Calculations
-      const myApprovedSales = approvedSales.filter(s => s.agentId === user.id);
+      // Turnover & Conversion BI Calculations (Section 4.5)
+      const activeInventoryCount = state.cars.filter(c => c.status !== 'Sold').length;
+      const soldWithDays = approvedSales.filter(s => Number(s.daysToSell) > 0);
+      const avgTurnoverDays = soldWithDays.length > 0
+        ? Math.round(soldWithDays.reduce((sum, s) => sum + Number(s.daysToSell), 0) / soldWithDays.length)
+        : 0;
+      const activeLotAges = state.cars.filter(c => c.status !== 'Sold').map(c => getDaysBetweenDates(c.listedAt));
+      const avgActiveLotDays = activeLotAges.length > 0
+        ? Math.round(activeLotAges.reduce((a, b) => a + b, 0) / activeLotAges.length)
+        : 0;
+
+      const totalConfirmedViewings = state.bookings.filter(b => b.status === 'CONFIRMED').length;
+      const conversionDenominator = Math.max(totalConfirmedViewings + approvedSales.length, 1);
+      const viewingToSaleConversionPct = Math.round((approvedSales.length / conversionDenominator) * 100);
+
+      // Top-Performing Agents Leaderboard
+      const agentIds = ['agent_marco', 'agent_bianca', 'agent_jomar'];
+      const agentLeaderboard = agentIds.map(agId => {
+        const agUser = USERS[agId];
+        const unitsSold = allApprovedSales.filter(s => s.agentId === agId).length;
+        const remittedVol = allApprovedSales.filter(s => s.agentId === agId).reduce((sum, s) => sum + Number(s.basePriceSnapshot || 0), 0);
+        const viewingsBooked = state.bookings.filter(b => b.agentId === agId && b.status === 'CONFIRMED').length;
+        const leadsAcquired = state.leads.filter(l => l.agentId === agId && l.status === 'ACQUIRED').length;
+        const leadsSubmitted = state.leads.filter(l => l.agentId === agId).length;
+        return {
+          id: agId,
+          name: agUser?.name || agId,
+          unitsSold,
+          remittedVol,
+          viewingsBooked,
+          leadsAcquired,
+          leadsSubmitted
+        };
+      }).sort((a, b) => (b.unitsSold - a.unitsSold) || (b.remittedVol - a.remittedVol) || (b.viewingsBooked - a.viewingsBooked));
+
+      // Agent Personal KPI Calculations
+      const myApprovedSales = allApprovedSales.filter(s => s.agentId === user.id);
       const myPendingSales = pendingSales.filter(s => s.agentId === user.id);
       const myVerifiedCommissionAndFlat = myApprovedSales.reduce((sum, s) => sum + Number(s.agentPayout || 0), 0);
       const myPrivatePatongTotal = myApprovedSales.reduce((sum, s) => sum + Number(s.privatePatong || 0), 0);
@@ -2479,25 +2735,60 @@
 
       return `
         <div class="space-y-6">
-          <!-- Header -->
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <!-- Header & Date-Range / CSV Export Bar -->
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
             <div>
-              <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Sales & Dealership Payouts</h1>
+              <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+                ${isOwner ? 'Owner Analytics, Turnover BI & Payouts' : 'Sales & Dealership Payouts'}
+              </h1>
               <p class="text-xs sm:text-sm text-slate-500">
                 Supports <strong class="text-indigo-700">Base Price + Markup (Patong)</strong> and <strong class="text-slate-800">1.0%–3.0% Percentage Commission</strong>.
               </p>
             </div>
-            <button
-              onclick="openLogSaleModal()"
-              class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold shadow-sm transition shrink-0"
-            >
-              <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-400"></i>
-              <span>Log Closed Sale</span>
-            </button>
+
+            <div class="flex flex-wrap items-center gap-2">
+              ${isOwner ? `
+                <div class="inline-flex items-center rounded-xl bg-white border border-slate-200 p-1 shadow-2xs">
+                  ${[
+                    { key: '7D', label: '7 Days' },
+                    { key: '30D', label: '30 Days' },
+                    { key: 'ALL', label: 'All Time' }
+                  ].map(r => `
+                    <button
+                      type="button"
+                      onclick="setAnalyticsRange('${r.key}')"
+                      class="px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                        rangeKey === r.key
+                          ? 'bg-indigo-600 text-white'
+                          : 'text-slate-600 hover:bg-slate-100'
+                      }"
+                    >${r.label}</button>
+                  `).join('')}
+                </div>
+
+                <button
+                  type="button"
+                  onclick="exportSalesLedgerCSV()"
+                  class="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 text-xs font-bold shadow-2xs transition"
+                >
+                  <i data-lucide="download" class="w-3.5 h-3.5 text-indigo-600"></i>
+                  <span>Export CSV</span>
+                </button>
+              ` : ''}
+
+              <button
+                onclick="openLogSaleModal()"
+                class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold shadow-sm transition shrink-0"
+              >
+                <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-400"></i>
+                <span>Log Closed Sale</span>
+              </button>
+            </div>
           </div>
 
           <!-- Role-Filtered KPI Summary Cards -->
           ${isOwner ? `
+            <!-- Row 1: Financial Metrics -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
                 <div class="text-xs font-bold uppercase text-slate-500">Total Remitted Revenue</div>
@@ -2513,6 +2804,80 @@
                 <div class="text-xs font-bold uppercase text-slate-500">Pending Remittances</div>
                 <div class="text-2xl font-extrabold text-amber-600 mt-1 tabular-nums">${pendingSales.length} Unit(s)</div>
                 <div class="text-[11px] text-slate-500 mt-1">${formatPHP(pendingSales.reduce((s, x) => s + Number(x.basePriceSnapshot || 0), 0))} awaiting verification</div>
+              </div>
+            </div>
+
+            <!-- Row 2: Operational & Turnover BI Metrics (PRD Section 4.5) -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="bg-slate-900 text-white p-4 rounded-2xl shadow-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold uppercase text-sky-300">Avg. Inventory Turnover</span>
+                  <i data-lucide="timer" class="w-4 h-4 text-sky-400"></i>
+                </div>
+                <div class="text-2xl font-extrabold mt-1 tabular-nums">${avgTurnoverDays > 0 ? `${avgTurnoverDays} Days` : '—'}</div>
+                <div class="text-[11px] text-slate-300 mt-1">Listing to Sold • Active lot avg: <strong class="text-white">${avgActiveLotDays}d</strong></div>
+              </div>
+
+              <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold uppercase text-slate-500">Viewing → Sale Conversion</span>
+                  <i data-lucide="trending-up" class="w-4 h-4 text-emerald-600"></i>
+                </div>
+                <div class="text-2xl font-extrabold text-indigo-700 mt-1 tabular-nums">${viewingToSaleConversionPct}%</div>
+                <div class="text-[11px] text-slate-500 mt-1">${approvedSales.length} closed sale(s) vs. ${totalConfirmedViewings} active viewing(s)</div>
+              </div>
+
+              <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold uppercase text-slate-500">Active Lot Stock</span>
+                  <i data-lucide="warehouse" class="w-4 h-4 text-slate-500"></i>
+                </div>
+                <div class="text-2xl font-extrabold text-slate-900 mt-1 tabular-nums">${activeInventoryCount} Unit(s)</div>
+                <div class="text-[11px] text-slate-500 mt-1">${state.cars.filter(c => c.status === 'Reserved').length} Reserved • ${state.cars.filter(c => c.status === 'Sold').length} Total Sold</div>
+              </div>
+            </div>
+
+            <!-- Top-Performing Agents Leaderboard -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-xs space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h2 class="font-extrabold text-sm sm:text-base text-slate-900 flex items-center gap-2">
+                    <i data-lucide="trophy" class="w-4 h-4 text-amber-500"></i>
+                    <span>Top-Performing Agents Leaderboard</span>
+                  </h2>
+                  <p class="text-xs text-slate-500">Ranked by closed units sold, remitted floor volume, active viewings, and off-market sourcing</p>
+                </div>
+                <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[11px] font-bold">3 Accredited Agents</span>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                ${agentLeaderboard.map((ag, idx) => `
+                  <div class="p-3.5 rounded-xl border ${idx === 0 ? 'border-amber-300 bg-amber-50/40' : 'border-slate-200 bg-slate-50/60'} space-y-2">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full ${idx === 0 ? 'bg-amber-400 text-slate-950' : 'bg-slate-200 text-slate-700'} text-xs font-extrabold flex items-center justify-center">
+                          #${idx + 1}
+                        </span>
+                        <span class="font-extrabold text-xs sm:text-sm text-slate-900">${ag.name}</span>
+                      </div>
+                      <span class="text-xs font-extrabold text-emerald-700">${ag.unitsSold} Sold</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-1.5 pt-1 border-t border-slate-200/80 text-center text-[11px]">
+                      <div class="bg-white rounded-lg p-1.5 border border-slate-200/70">
+                        <div class="text-slate-400 text-[10px]">Remitted</div>
+                        <div class="font-extrabold text-slate-800 tabular-nums">${formatPHP(ag.remittedVol)}</div>
+                      </div>
+                      <div class="bg-white rounded-lg p-1.5 border border-slate-200/70">
+                        <div class="text-slate-400 text-[10px]">Viewings</div>
+                        <div class="font-extrabold text-indigo-700 tabular-nums">${ag.viewingsBooked}</div>
+                      </div>
+                      <div class="bg-white rounded-lg p-1.5 border border-slate-200/70">
+                        <div class="text-slate-400 text-[10px]">Leads</div>
+                        <div class="font-extrabold text-emerald-700 tabular-nums">${ag.leadsAcquired}/${ag.leadsSubmitted}</div>
+                      </div>
+                    </div>
+                  </div>
+                `).join('')}
               </div>
             </div>
           ` : `
@@ -2801,6 +3166,9 @@
                     </div>
                   </div>
 
+                  <!-- Multi-Photo Upload for Off-Market Lead -->
+                  ${renderPhotoUploadBox('lead', 'Upload Unit Photos (Exterior, Interior, Odometer, OR/CR)')}
+
                   <!-- Standardized Initial Condition & Document Checklist + Other Issues Not Listed -->
                   ${renderChecklistFormSection('lead', [])}
 
@@ -2845,6 +3213,29 @@
                         ` : ''}
                       </div>
                     </div>
+
+                    <!-- Scouted Lead Photo Strip -->
+                    ${(() => {
+                      const lPhotos = (lead.photos && lead.photos.length > 0)
+                        ? lead.photos
+                        : createSampleVehiclePhotos(lead.year, lead.make, lead.model, 'Stock', lead.category);
+                      return `
+                        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                          ${lPhotos.map((p, idx) => `
+                            <button
+                              type="button"
+                              onclick="openEntityPhotoGallery('lead', '${lead.id}', ${idx})"
+                              class="relative rounded-xl overflow-hidden border border-slate-300 hover:border-indigo-500 w-24 h-16 shrink-0 group transition"
+                            >
+                              <img src="${p.url}" alt="${p.label}" class="w-full h-full object-cover group-hover:scale-105 transition" />
+                              <span class="absolute bottom-0.5 left-0.5 right-0.5 px-1 rounded bg-slate-950/75 text-[9px] font-semibold text-white truncate">
+                                ${p.label || 'Photo ' + (idx + 1)}
+                              </span>
+                            </button>
+                          `).join('')}
+                        </div>
+                      `;
+                    })()}
 
                     <div class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200/80 text-xs flex flex-wrap items-center justify-between gap-2">
                       <div>
@@ -2894,6 +3285,7 @@
         mainEl.innerHTML = renderSalesView();
       } else if (state.activeTab === 'sourcing') {
         mainEl.innerHTML = renderSourcingView();
+        renderPhotoUploadPreviewStrip('lead');
       }
 
       if (window.lucide) {
