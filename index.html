@@ -299,7 +299,7 @@
           <span id="saleModalCategoryBadge" class="px-2 py-0.5 rounded-md bg-white border border-slate-300 font-bold text-[11px] text-slate-700"></span>
         </div>
 
-        <!-- 3 Authentic PH Payout Models Selector -->
+        <!-- 2 PH Payout Models Selector (Base Price + Markup & Percentage Commission) -->
         <div class="space-y-2">
           <label class="block text-xs font-bold text-slate-700">Choose Philippine Payout Structure</label>
 
@@ -317,27 +317,13 @@
             </div>
           </label>
 
-          <!-- Option 2: Flat Fee per Unit -->
-          <label class="cursor-pointer block border-2 rounded-xl p-3 transition has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50/50 border-slate-200">
-            <div class="flex items-start gap-2.5">
-              <input type="radio" name="payoutModel" value="FLAT_FEE" onchange="onPayoutModelChange()" class="mt-0.5 accent-emerald-600" />
-              <div class="flex-1">
-                <div class="flex items-center justify-between">
-                  <span class="text-xs font-extrabold text-slate-900">2. Flat Fee per Unit (Category Tier)</span>
-                  <span id="saleModalFlatFeeBadge" class="text-[11px] font-extrabold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md tabular-nums">₱0</span>
-                </div>
-                <p class="text-[11px] text-slate-600 mt-0.5">Fixed unit payout (₱5k–₱15k Sedans • ₱15k–₱30k SUVs/Pickups • ₱30k–₱50k+ Luxury).</p>
-              </div>
-            </div>
-          </label>
-
-          <!-- Option 3: Percentage Commission (1%–3%, Default 2%) -->
+          <!-- Option 2: Percentage Commission (1%–3%, Default 2%) -->
           <label class="cursor-pointer block border-2 rounded-xl p-3 transition has-[:checked]:border-slate-900 has-[:checked]:bg-slate-50 border-slate-200">
             <div class="flex items-start gap-2.5">
               <input type="radio" name="payoutModel" value="COMMISSION" onchange="onPayoutModelChange()" class="mt-0.5 accent-slate-900" />
               <div class="flex-1">
                 <div class="flex items-center justify-between">
-                  <span class="text-xs font-extrabold text-slate-900">3. Percentage Commission (<span id="saleModalCommRateText">2.0</span>%)</span>
+                  <span class="text-xs font-extrabold text-slate-900">2. Percentage Commission (<span id="saleModalCommRateText">2.0</span>%)</span>
                   <span id="saleModalCommPreviewBadge" class="text-[11px] font-extrabold text-slate-800 bg-slate-200 px-2 py-0.5 rounded-md tabular-nums">₱0</span>
                 </div>
                 <p class="text-[11px] text-slate-600 mt-0.5">Standard PH gross commission (1.0%–3.0%) calculated on final approved selling price.</p>
@@ -369,18 +355,7 @@
           </div>
         </div>
 
-        <!-- Dynamic Section B: Flat Fee Details -->
-        <div id="sectionFlatFee" class="hidden space-y-2">
-          <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs">
-            <div>
-              <div class="font-bold text-emerald-950">Preset Unit Flat Fee Payout</div>
-              <div class="text-[11px] text-emerald-700">Credited upon Owner Base Price remittance verification</div>
-            </div>
-            <div id="flatFeeBigDisplay" class="text-base font-extrabold text-emerald-800 tabular-nums">₱0</div>
-          </div>
-        </div>
-
-        <!-- Dynamic Section C: Percentage Commission Calculator -->
+        <!-- Dynamic Section B: Percentage Commission Calculator -->
         <div id="sectionCommission" class="hidden space-y-3">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Final Approved Selling Price (₱)</label>
@@ -495,9 +470,11 @@
             <input type="number" id="newCarBasePrice" value="650000" step="5000" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-extrabold tabular-nums" />
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Unit Flat Fee Payout (₱)</label>
-            <input type="number" id="newCarFlatFee" value="10000" step="1000" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-extrabold text-emerald-700 tabular-nums" />
-            <p id="newCarFlatFeeHint" class="text-[11px] text-slate-500 mt-1">Suggested tier: ₱5,000 – ₱15,000</p>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Default Dealership Commission</label>
+            <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-extrabold text-indigo-700 tabular-nums">
+              <span id="newCarCommRateLabel">2.0%</span> <span class="text-xs font-semibold text-slate-500">(1.0%–3.0% tier)</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1">Or agents keep 100% above Base Price (Patong)</p>
           </div>
         </div>
 
@@ -571,30 +548,17 @@
         <input type="hidden" id="acquireLeadId" />
         <div id="acquireLeadSummaryBox" class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1"></div>
 
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Finder's Fee (₱)</label>
-            <input
-              type="number"
-              id="acquireFindersFeeInput"
-              value="3000"
-              min="1000"
-              step="500"
-              required
-              class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm font-extrabold text-emerald-700 tabular-nums"
-            />
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Unit Flat Fee Payout (₱)</label>
-            <input
-              type="number"
-              id="acquireUnitFlatFeeInput"
-              value="22000"
-              step="1000"
-              required
-              class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm font-bold tabular-nums"
-            />
-          </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Finder's Fee (₱)</label>
+          <input
+            type="number"
+            id="acquireFindersFeeInput"
+            value="3000"
+            min="1000"
+            step="500"
+            required
+            class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm font-extrabold text-emerald-700 tabular-nums"
+          />
         </div>
 
         <div>
@@ -942,10 +906,10 @@
             carId: 'car_civic_2019',
             carTitle: '2019 Honda Civic 1.8 E CVT',
             agentId: 'agent_bianca',
-            payoutModel: 'FLAT_FEE',
+            payoutModel: 'COMMISSION',
             basePriceSnapshot: 680000,
-            reportedSalePrice: 680000,
-            agentPayout: 12000,
+            reportedSalePrice: 685000,
+            agentPayout: 13700, // 2.0% of ₱685,000
             privatePatong: null,
             status: 'PENDING',
             submittedAt: 'Today, 11:30 AM'
@@ -1010,7 +974,7 @@
           {
             time: '11:30 AM',
             event: 'SALE_SUBMITTED',
-            detail: 'Bianca Cruz submitted Base Price remittance (₱680,000) for 2019 Honda Civic 1.8 E CVT (₱12,000 Flat Fee).'
+            detail: 'Bianca Cruz submitted Base Price remittance (₱680,000) for 2019 Honda Civic 1.8 E CVT (2.0% Commission).'
           },
           {
             time: '10:20 AM',
@@ -1501,7 +1465,8 @@
     }
 
     function openAddCarModal() {
-      onNewCarCategoryChange();
+      const rateLabel = document.getElementById('newCarCommRateLabel');
+      if (rateLabel) rateLabel.textContent = `${state.commissionRate.toFixed(1)}%`;
       const container = document.getElementById('addCarChecklistContainer');
       if (container) {
         container.innerHTML = renderChecklistFormSection('addCar', []);
@@ -1525,7 +1490,6 @@
         transmission: document.getElementById('newCarTrans').value,
         fuelType: document.getElementById('newCarFuel').value,
         basePrice: parseInt(document.getElementById('newCarBasePrice').value, 10),
-        unitFlatFee: parseInt(document.getElementById('newCarFlatFee').value, 10),
         status: 'Available',
         documentStatus: document.getElementById('newCarDocs').value,
         checklistItems: checkedItems,
@@ -1539,7 +1503,6 @@
       saveState();
       closeModal('addCarModal');
       e.target.reset();
-      onNewCarCategoryChange();
 
       broadcastSocketEvent(
         'NEW_INVENTORY_LIVE',
@@ -1747,7 +1710,6 @@
     function onPayoutModelChange() {
       const selected = document.querySelector('input[name="payoutModel"]:checked').value;
       document.getElementById('sectionMarkup').classList.toggle('hidden', selected !== 'MARKUP');
-      document.getElementById('sectionFlatFee').classList.toggle('hidden', selected !== 'FLAT_FEE');
       document.getElementById('sectionCommission').classList.toggle('hidden', selected !== 'COMMISSION');
       refreshSaleModalCalculations(false);
     }
@@ -1761,8 +1723,6 @@
       document.getElementById('saleModalBasePrice').textContent = formatPHP(car.basePrice);
       document.getElementById('saleModalCategoryBadge').textContent = car.category;
       document.getElementById('markupBaseEcho').textContent = formatPHP(car.basePrice);
-      document.getElementById('saleModalFlatFeeBadge').textContent = `${formatPHP(car.unitFlatFee)} Flat Fee`;
-      document.getElementById('flatFeeBigDisplay').textContent = formatPHP(car.unitFlatFee);
 
       document.getElementById('saleModalCommRateText').textContent = rate.toFixed(1);
       document.getElementById('commCalcFormulaRate').textContent = rate.toFixed(1);
@@ -1801,9 +1761,6 @@
         }
         const patongVal = parseFloat(document.getElementById('privatePatongAmount').value);
         privatePatong = isNaN(patongVal) ? 0 : patongVal;
-      } else if (model === 'FLAT_FEE') {
-        reportedSalePrice = car.basePrice;
-        agentPayout = car.unitFlatFee;
       } else if (model === 'COMMISSION') {
         reportedSalePrice = parseFloat(document.getElementById('commissionSellingPriceInput').value) || 0;
         if (reportedSalePrice < car.basePrice) {
@@ -1833,7 +1790,7 @@
 
       const modelLabel = model === 'MARKUP'
         ? 'Base Price + Markup (Patong)'
-        : (model === 'FLAT_FEE' ? `Flat Fee (${formatPHP(agentPayout)})` : `${state.commissionRate.toFixed(1)}% Commission (${formatPHP(agentPayout)})`);
+        : `${state.commissionRate.toFixed(1)}% Commission (${formatPHP(agentPayout)})`;
 
       broadcastSocketEvent(
         'SALE_PENDING_VERIFICATION',
@@ -1916,8 +1873,6 @@
       document.getElementById('acquireLeadId').value = lead.id;
       document.getElementById('acquireFindersFeeInput').value = 3000;
       document.getElementById('acquireBasePriceInput').value = lead.askingPrice + 40000;
-      document.getElementById('acquireUnitFlatFeeInput').value =
-        lead.category === 'Luxury ₱2M+' ? 40000 : (lead.category === 'SUV / Pickup' ? 22000 : 10000);
 
       document.getElementById('acquireLeadSummaryBox').innerHTML = `
         <div><strong>Scouted Unit:</strong> ${lead.year} ${lead.make} ${lead.model} (${lead.category})</div>
@@ -1935,7 +1890,6 @@
 
       const findersFee = parseInt(document.getElementById('acquireFindersFeeInput').value, 10);
       const basePrice = parseInt(document.getElementById('acquireBasePriceInput').value, 10);
-      const unitFlatFee = parseInt(document.getElementById('acquireUnitFlatFeeInput').value, 10);
       const scout = USERS[lead.agentId];
 
       lead.status = 'ACQUIRED';
@@ -1960,7 +1914,6 @@
         transmission: 'AT',
         fuelType: 'Diesel',
         basePrice,
-        unitFlatFee,
         status: 'Available',
         documentStatus: (lead.checklistItems || []).includes('orig_or_cr') ? 'Complete OR/CR' : 'Pending Document Verification',
         checklistItems: [...(lead.checklistItems || [])],
@@ -2071,7 +2024,7 @@
             <div>
               <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Live Dealership Inventory</h1>
               <p class="text-xs sm:text-sm text-slate-500">
-                Internal floor prices are visible to invited agents only. Choose between <strong class="text-slate-700">Markup (Patong)</strong>, <strong class="text-slate-700">Unit Flat Fee</strong>, or <strong class="text-slate-700">${state.commissionRate.toFixed(1)}% Commission</strong>.
+                Internal floor prices are visible to invited agents only. Choose between <strong class="text-slate-700">Base Price + Markup (Patong)</strong> or <strong class="text-slate-700">${state.commissionRate.toFixed(1)}% Commission</strong>.
               </p>
             </div>
             ${isOwner ? `
@@ -2195,11 +2148,9 @@
                         <!-- Agent Payout Options Pill -->
                         <div class="px-3 py-2 rounded-xl bg-emerald-50/90 border border-emerald-200 text-xs font-bold text-emerald-950 flex flex-wrap items-center gap-x-1.5 gap-y-1">
                           <i data-lucide="coins" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></i>
-                          <span>Markup (Keep 100% above Base)</span>
+                          <span>Base Price + Markup (Keep 100% Spread)</span>
                           <span class="text-emerald-400">•</span>
-                          <span class="text-emerald-800">${formatPHP(car.unitFlatFee)} Flat Fee</span>
-                          <span class="text-emerald-400">•</span>
-                          <span class="text-indigo-800">${state.commissionRate.toFixed(1)}% Comm (${formatPHP(commAmount)})</span>
+                          <span class="text-indigo-800">${state.commissionRate.toFixed(1)}% Commission (${formatPHP(commAmount)})</span>
                         </div>
 
                         <!-- Reservation Receipt Info if Reserved -->
@@ -2531,9 +2482,9 @@
           <!-- Header -->
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Sales & Authentic PH Payouts</h1>
+              <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Sales & Dealership Payouts</h1>
               <p class="text-xs sm:text-sm text-slate-500">
-                Supports <strong class="text-indigo-700">Markup (Patong)</strong>, <strong class="text-emerald-700">Category Flat Fees</strong>, and <strong class="text-slate-800">1%–3% Dealership Commission</strong>.
+                Supports <strong class="text-indigo-700">Base Price + Markup (Patong)</strong> and <strong class="text-slate-800">1.0%–3.0% Percentage Commission</strong>.
               </p>
             </div>
             <button
@@ -2595,7 +2546,7 @@
                   <h2 class="font-extrabold text-sm sm:text-base text-slate-900">Default Percentage Commission Rate: <span class="text-indigo-700">${state.commissionRate.toFixed(1)}%</span></h2>
                 </div>
                 <p class="text-xs text-slate-600 leading-relaxed">
-                  <strong>PH Market Guide:</strong> Standard PH gross commission is <strong>1%–3%</strong>. Flat fees follow category tiers: <strong>₱5k–₱15k Sedans</strong>, <strong>₱15k–₱30k SUVs/Pickups</strong>, <strong>₱30k–₱50k+ Luxury</strong>.
+                  <strong>PH Market Guide:</strong> Standard PH gross commission is <strong>1.0%–3.0%</strong>, or agents can sell above the Owner's <strong>Base Price</strong> and keep 100% of their private <strong>Markup (Patong)</strong>.
                 </p>
               </div>
 
@@ -2650,7 +2601,6 @@
                 ${pendingSales.map(sale => {
                   const agent = USERS[sale.agentId];
                   const isMarkup = sale.payoutModel === 'MARKUP';
-                  const isFlat = sale.payoutModel === 'FLAT_FEE';
                   const isMySale = sale.agentId === user.id;
 
                   return `
@@ -2658,9 +2608,9 @@
                       <div class="flex items-start justify-between gap-2">
                         <div>
                           <span class="inline-block px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider mb-1 ${
-                            isMarkup ? 'bg-indigo-100 text-indigo-800' : (isFlat ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-800')
+                            isMarkup ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800'
                           }">
-                            ${isMarkup ? 'Base Price + Markup (Patong)' : (isFlat ? 'Flat Fee per Unit' : `${state.commissionRate.toFixed(1)}% Commission`)}
+                            ${isMarkup ? 'Base Price + Markup (Patong)' : `${state.commissionRate.toFixed(1)}% Commission`}
                           </span>
                           <h3 class="font-extrabold text-base text-slate-900">${sale.carTitle}</h3>
                           <p class="text-xs text-slate-500">Agent: <strong class="text-slate-800">${agent?.name || 'Agent'}</strong> • ${sale.submittedAt}</p>
