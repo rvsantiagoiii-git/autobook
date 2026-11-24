@@ -75,13 +75,14 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-  <!-- TOP REAL-TIME DEALERSHIP HEADER (Protected Word-Width Brand + Clean Navigation) -->
+  <!-- TOP REAL-TIME DEALERSHIP HEADER (2-Row Layout: Brand & Controls Top, Navigation Bar Below) -->
   <header class="sticky top-0 z-40 bg-slate-950 text-white border-b border-slate-800 shadow-lg">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16 gap-2 sm:gap-3">
+      <!-- Row 1: Dealership Brand (Full Word Width) + Settings & Role Switcher -->
+      <div class="flex items-center justify-between min-h-16 py-2 gap-3">
 
         <!-- Brand & Live Socket Indicator (Locked to exact company name width) -->
-        <div class="flex items-center gap-2.5 w-max shrink-0">
+        <div class="flex items-center gap-2.5 w-max shrink-0 min-w-0">
           <div id="brand-logo-box" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center shrink-0 overflow-hidden">
             <i data-lucide="car-front" class="w-5 h-5 text-emerald-400"></i>
           </div>
@@ -103,11 +104,6 @@
           </div>
         </div>
 
-        <!-- Primary Navigation Tabs (Desktop Wide) -->
-        <nav id="desktop-nav" class="hidden xl:flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 shrink-0">
-          <!-- Rendered by JS -->
-        </nav>
-
         <!-- Role Switcher & Owner Settings -->
         <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <div id="owner-header-actions" class="flex items-center gap-1.5 shrink-0"></div>
@@ -121,8 +117,8 @@
 
       </div>
 
-      <!-- Secondary Tab Bar (Tablet & Medium Laptops) -->
-      <nav id="tablet-nav" class="hidden md:flex xl:hidden items-center gap-1.5 pb-2.5 overflow-x-auto">
+      <!-- Row 2: Dedicated Primary Navigation Bar (Zero Overlap Across All Screen Sizes) -->
+      <nav id="desktop-nav" class="hidden md:flex items-center gap-1.5 pb-2.5 pt-1 border-t border-slate-800/80 overflow-x-auto">
         <!-- Rendered by JS -->
       </nav>
     </div>
@@ -650,7 +646,6 @@
     function createDefaultState() {
       const today = getDateOffsetStr(0);
       const tomorrow = getDateOffsetStr(1);
-      const dayAfter = getDateOffsetStr(2);
 
       return {
         currentUserId: 'owner_rv',
@@ -661,6 +656,11 @@
         calendarCarId: 'car_montero_2021',
         calendarDateFilter: today,
         commissionRate: 2.0, // Default 2.0% (constrained 1.0% - 3.0%)
+        sourcingIncentive: {
+          enabled: true,
+          type: 'FIXED', // 'FIXED' | 'PERCENT'
+          amount: 5000 // PHP 5,000 fixed bonus or % if type === 'PERCENT'
+        },
         branding: { ...DEFAULT_BRANDING },
         statusPipeline: getDefaultStatusPipeline(),
         agents: JSON.parse(JSON.stringify(DEFAULT_USERS)),
@@ -864,6 +864,7 @@
             status: 'Sold',
             listedDaysAgo: 18,
             soldAt: today,
+            soldByAgentId: 'agent_jester',
             photos: [
               { label: 'Sold Showroom Unit', url: makeCarSamplePhoto('2021 Mitsubishi Xpander GLS (SOLD)', '#334155', '#94a3b8', 'SOLD UNIT') }
             ],
@@ -1008,6 +1009,7 @@
           if (!parsed.agents) parsed.agents = JSON.parse(JSON.stringify(DEFAULT_USERS));
           if (!parsed.invites) parsed.invites = defaults.invites;
           if (!parsed.branding) parsed.branding = { ...DEFAULT_BRANDING };
+          if (!parsed.sourcingIncentive) parsed.sourcingIncentive = { ...defaults.sourcingIncentive };
           if (!Array.isArray(parsed.statusPipeline) || parsed.statusPipeline.length === 0) {
             parsed.statusPipeline = getDefaultStatusPipeline();
           }
@@ -1030,6 +1032,15 @@
       }
       return createDefaultState();
     })();
+
+    function getSourcingBonusAmount(basePrice) {
+      const cfg = state.sourcingIncentive;
+      if (!cfg || !cfg.enabled) return 0;
+      if (cfg.type === 'PERCENT') {
+        return Math.round((Number(basePrice) || 0) * ((Number(cfg.amount) || 0) / 100));
+      }
+      return Math.max(0, Number(cfg.amount) || 0);
+    }
 
     function saveState() {
       try {
@@ -1132,9 +1143,7 @@
       }).join('');
 
       const desktopNav = document.getElementById('desktop-nav');
-      const tabletNav = document.getElementById('tablet-nav');
       if (desktopNav) desktopNav.innerHTML = desktopHtml;
-      if (tabletNav) tabletNav.innerHTML = desktopHtml;
 
       const mobileNav = document.getElementById('mobile-nav');
       if (mobileNav) {
@@ -1393,7 +1402,6 @@
               const stageMeta = getStatusStageMeta(car.status);
               const bookable = isCarBookable(car);
               const reconTotal = getCarReconTotal(car);
-              const buyInCost = getCarAcquisitionCost(car);
               const totalInvested = getCarTotalInvested(car);
               const netProfitPatong = car.basePrice - totalInvested;
               const netProfitComm = Math.round(car.basePrice * (1 - state.commissionRate / 100)) - totalInvested;
@@ -1614,11 +1622,40 @@
                     </div>
 
                     <!-- Card Action Footer -->
-                    ${isCarSold(car) ? `
-                      <div class="pt-1 text-center text-xs font-bold text-slate-500 bg-slate-100 rounded-xl py-2.5">
-                        Unit Sold &bull; Locked from Further Bookings
-                      </div>
-                    ` : priorityLockedForMe ? `
+                    ${isCarSold(car) ? (() => {
+                      const saleRecord = state.sales.find(s => s.carId === car.id);
+                      const sellerId = car.soldByAgentId || saleRecord?.agentId || car.reservation?.agentId;
+                      const sellerUser = sellerId ? getUserRecord(sellerId) : null;
+                      const scoutBonusPaid = saleRecord?.sourcingBonus || 0;
+                      const scoutUser = saleRecord?.sourcedByAgentId ? getUserRecord(saleRecord.sourcedByAgentId) : null;
+                      return `
+                        <div class="p-3 rounded-xl bg-slate-900 text-white text-xs space-y-1">
+                          <div class="flex items-center justify-between gap-2">
+                            <span class="font-extrabold text-emerald-400 flex items-center gap-1.5">
+                              <i data-lucide="badge-check" class="w-4 h-4 shrink-0"></i>
+                              <span>Sold by ${escapeHtml(sellerUser?.name || 'Dealership Team')}</span>
+                            </span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">
+                              ${escapeHtml(car.soldAt || saleRecord?.date || 'Closed')}
+                            </span>
+                          </div>
+                          ${isOwner && saleRecord ? `
+                            <p class="text-[11px] text-slate-300">
+                              Model: <strong>${saleRecord.payoutModel === 'MARKUP' ? 'Base + Patong' : `${saleRecord.commissionRateApplied || state.commissionRate}% Comm`}</strong>
+                              &bull; Agent Payout: <strong class="text-emerald-300">${formatPHP(saleRecord.agentPayout)}</strong>
+                              (${escapeHtml(saleRecord.status)})
+                            </p>
+                            ${scoutBonusPaid > 0 && scoutUser ? `
+                              <p class="text-[11px] text-indigo-300">
+                                + Scout Incentive: <strong>${formatPHP(scoutBonusPaid)}</strong> to ${escapeHtml(scoutUser.name)}
+                              </p>
+                            ` : ''}
+                          ` : `
+                            <p class="text-[10px] text-slate-400">Unit Sold &bull; Locked from Further Bookings</p>
+                          `}
+                        </div>
+                      `;
+                    })() : priorityLockedForMe ? `
                       <div class="text-center text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-xl py-2 px-3">
                         Locked under ${escapeHtml(scoutAgent?.name || 'Scout')}'s 48h Attribution Window
                       </div>
@@ -2224,7 +2261,8 @@
         const unitCost = typeof s.unitCostSnapshot === 'number'
           ? s.unitCostSnapshot
           : (car ? getCarTotalInvested(car) : s.basePriceSnapshot);
-        return sum + (s.dealershipNet - unitCost);
+        const scoutPayout = Number(s.sourcingBonus) || 0;
+        return sum + (s.dealershipNet - unitCost - scoutPayout);
       }, 0);
       const totalAgentEarned = approvedSales.reduce((sum, s) => sum + s.agentPayout, 0);
       const totalPendingPayout = pendingSales.reduce((sum, s) => sum + s.agentPayout, 0);
@@ -2366,7 +2404,9 @@
                 const unitCost = typeof sale.unitCostSnapshot === 'number'
                   ? sale.unitCostSnapshot
                   : (car ? getCarTotalInvested(car) : sale.basePriceSnapshot);
-                const dealNetProfit = sale.dealershipNet - unitCost;
+                const scoutBonus = Number(sale.sourcingBonus) || 0;
+                const scoutUser = sale.sourcedByAgentId ? getUserRecord(sale.sourcedByAgentId) : null;
+                const dealNetProfit = sale.dealershipNet - unitCost - scoutBonus;
 
                 return `
                   <div class="p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -2389,7 +2429,8 @@
                         </span>
                       </div>
                       <p class="text-xs text-slate-500">
-                        Agent: <strong class="text-slate-700">${escapeHtml(agent.name)}</strong> &bull; Date: ${escapeHtml(sale.date)}
+                        Sold by: <strong class="text-slate-700">${escapeHtml(agent.name)}</strong> &bull; Date: ${escapeHtml(sale.date)}
+                        ${scoutBonus > 0 && scoutUser ? ` &bull; <span class="text-indigo-700 font-semibold">Scout Bonus: ${formatPHP(scoutBonus)} (${escapeHtml(scoutUser.name)})</span>` : ''}
                       </p>
                       ${sale.notes ? `<p class="text-[11px] text-slate-500 italic">"${escapeHtml(sale.notes)}"</p>` : ''}
                     </div>
@@ -2445,9 +2486,13 @@
     function renderSourcingView() {
       const user = getCurrentUser();
       const isOwner = isOwnerRole(user);
+      const incentiveCfg = state.sourcingIncentive || { enabled: false, type: 'FIXED', amount: 5000 };
+      const incentiveLabel = incentiveCfg.type === 'PERCENT'
+        ? `${Number(incentiveCfg.amount).toFixed(1)}% of Base Floor Price`
+        : `${formatPHP(incentiveCfg.amount)} Finder's Bonus`;
 
       return `
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div>
             <h2 class="text-xl font-extrabold text-slate-900">Off-Market Car Sourcing &amp; 48h Lead Attribution</h2>
             <p class="text-xs text-slate-500 mt-0.5">
@@ -2462,6 +2507,59 @@
             <i data-lucide="plus-circle" class="w-4 h-4"></i>
             <span>Submit Seller Lead</span>
           </button>
+        </div>
+
+        <!-- Optional Sourced Car Finder's Incentive Banner / Owner Control -->
+        <div class="mb-5 p-4 rounded-2xl border ${incentiveCfg.enabled ? 'bg-indigo-50/80 border-indigo-200' : 'bg-slate-100 border-slate-200'} flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-xl ${incentiveCfg.enabled ? 'bg-indigo-600 text-white' : 'bg-slate-300 text-slate-600'} flex items-center justify-center shrink-0">
+              <i data-lucide="gift" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs font-extrabold text-slate-900">Sourced Car Finder's Incentive</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${incentiveCfg.enabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}">
+                  ${incentiveCfg.enabled ? `ACTIVE: ${incentiveLabel} on Sale` : 'OFF (48h Priority Lock Only)'}
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-600 mt-0.5">
+                ${incentiveCfg.enabled
+                  ? `When an acquired off-market lead is sold (even if another agent closes the buyer), the scouting agent earns ${incentiveLabel}.`
+                  : 'Currently only the 48-hour exclusive booking lock is active for sourced cars. Owner can enable a cash/percentage finder’s bonus anytime.'}
+              </p>
+            </div>
+          </div>
+
+          ${isOwner ? `
+            <div class="flex flex-wrap items-center gap-2 bg-white p-2 rounded-xl border border-slate-200 shrink-0">
+              <label class="flex items-center gap-1.5 text-xs font-bold text-slate-800 px-1.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  ${incentiveCfg.enabled ? 'checked' : ''}
+                  onchange="toggleSourcingIncentiveEnabled(this.checked)"
+                  class="accent-indigo-600 w-4 h-4"
+                />
+                <span>Enable Bonus</span>
+              </label>
+              ${incentiveCfg.enabled ? `
+                <select
+                  onchange="updateSourcingIncentiveConfig(this.value, null)"
+                  class="px-2 py-1 border border-slate-200 rounded-lg text-xs font-bold bg-slate-50"
+                >
+                  <option value="FIXED" ${incentiveCfg.type === 'FIXED' ? 'selected' : ''}>Fixed PHP</option>
+                  <option value="PERCENT" ${incentiveCfg.type === 'PERCENT' ? 'selected' : ''}>% of Floor</option>
+                </select>
+                <input
+                  type="number"
+                  step="${incentiveCfg.type === 'PERCENT' ? '0.25' : '500'}"
+                  min="0"
+                  value="${incentiveCfg.amount}"
+                  onchange="updateSourcingIncentiveConfig(null, this.value)"
+                  class="w-24 px-2 py-1 border border-slate-200 rounded-lg text-xs font-extrabold text-right"
+                />
+              ` : ''}
+            </div>
+          ` : ''}
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -3731,12 +3829,17 @@
       const soldStage = (state.statusPipeline || getDefaultStatusPipeline()).find(s => s.systemRole === 'SOLD');
       car.status = soldStage ? soldStage.label : 'Sold';
       car.soldAt = getDateOffsetStr(0);
+      car.soldByAgentId = agentId;
+
+      const sourcingBonus = car.sourcedByAgentId ? getSourcingBonusAmount(car.basePrice) : 0;
 
       state.sales.unshift({
         id: 'sale_' + Date.now(),
         carId: car.id,
         carTitle: `${car.year} ${car.make} ${car.model}`,
         agentId,
+        sourcedByAgentId: car.sourcedByAgentId || null,
+        sourcingBonus,
         payoutModel,
         basePriceSnapshot: car.basePrice,
         unitCostSnapshot: getCarTotalInvested(car),
@@ -3755,9 +3858,34 @@
       renderApp();
       emitLiveEvent(
         'Vehicle Marked Sold',
-        `${car.year} ${car.make} ${car.model} closed by ${getUserRecord(agentId).name}.`,
+        `${car.year} ${car.make} ${car.model} closed by ${getUserRecord(agentId).name}${sourcingBonus > 0 ? ` (+${formatPHP(sourcingBonus)} scout incentive)` : ''}.`,
         'emerald'
       );
+    }
+
+    function toggleSourcingIncentiveEnabled(enabled) {
+      if (!state.sourcingIncentive) state.sourcingIncentive = { enabled: false, type: 'FIXED', amount: 5000 };
+      state.sourcingIncentive.enabled = Boolean(enabled);
+      saveState();
+      renderApp();
+      emitLiveEvent(
+        enabled ? 'Sourcing Incentive Enabled' : 'Sourcing Incentive Disabled',
+        enabled
+          ? `Scouts will earn ${state.sourcingIncentive.type === 'PERCENT' ? state.sourcingIncentive.amount + '%' : formatPHP(state.sourcingIncentive.amount)} when their sourced car sells.`
+          : 'Sourced car finder’s bonus turned off (48h booking lock remains active).',
+        'indigo'
+      );
+    }
+
+    function updateSourcingIncentiveConfig(newType, newAmount) {
+      if (!state.sourcingIncentive) state.sourcingIncentive = { enabled: true, type: 'FIXED', amount: 5000 };
+      if (newType) state.sourcingIncentive.type = newType;
+      if (newAmount !== null && newAmount !== undefined) {
+        state.sourcingIncentive.amount = Math.max(0, Number(newAmount) || 0);
+      }
+      saveState();
+      renderApp();
+      emitLiveEvent('Sourcing Bonus Updated', 'Updated finder’s incentive rate for acquired car leads.', 'indigo');
     }
 
     function approveSalePayout(saleId) {
@@ -4265,14 +4393,15 @@
 
     function exportSalesLedgerCSV() {
       const rows = [
-        ['Date', 'Vehicle', 'Agent', 'Payout Model', 'Floor Price', 'Unit Cost (Buy-In + Recon)', 'Dealership Net', 'Verified Net Profit', 'Agent Payout', 'Status']
+        ['Date', 'Vehicle', 'Agent', 'Payout Model', 'Floor Price', 'Unit Cost (Buy-In + Recon)', 'Scout Incentive', 'Dealership Net', 'Verified Net Profit', 'Agent Payout', 'Status']
       ];
       state.sales.forEach(s => {
         const car = state.cars.find(c => c.id === s.carId);
         const unitCost = typeof s.unitCostSnapshot === 'number'
           ? s.unitCostSnapshot
           : (car ? getCarTotalInvested(car) : s.basePriceSnapshot);
-        const netProfit = s.dealershipNet - unitCost;
+        const scoutBonus = Number(s.sourcingBonus) || 0;
+        const netProfit = s.dealershipNet - unitCost - scoutBonus;
         rows.push([
           s.date,
           `"${s.carTitle}"`,
@@ -4280,6 +4409,7 @@
           s.payoutModel,
           s.basePriceSnapshot,
           unitCost,
+          scoutBonus,
           s.dealershipNet,
           netProfit,
           s.agentPayout,
