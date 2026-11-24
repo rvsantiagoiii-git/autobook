@@ -132,15 +132,10 @@
         </button>
       </nav>
 
-      <!-- Active Role Switcher, Team Controls & Owner-Only Settings -->
-      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-        <button id="manage-agents-btn" onclick="openModal('agents-modal')" class="hidden px-2.5 py-2 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 text-xs font-bold transition items-center gap-1.5 whitespace-nowrap" title="Manage Team, Roles &amp; Invite Links">
-          <i data-lucide="users" class="w-3.5 h-3.5"></i>
-          <span class="hidden sm:inline">Team &amp; Invites</span>
       <!-- Active Role Switcher & Owner-Only Settings -->
       <div class="flex items-center gap-2 shrink-0">
         <div class="relative">
-          <select id="role-switcher" aria-label="Switch Active User Role" class="appearance-none bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold pl-2.5 pr-6 py-2 rounded-xl border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer max-w-[165px] sm:max-w-[215px] truncate">
+          <select id="role-switcher" aria-label="Switch Active User Role" class="appearance-none bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold pl-2.5 pr-7 py-2 rounded-xl border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer max-w-[185px] sm:max-w-[230px] truncate">
             <!-- Populated dynamically by renderRoleSwitcher() -->
           </select>
           <i data-lucide="chevrons-up-down" class="w-3.5 h-3.5 text-slate-400 pointer-events-none absolute right-2 top-1/2 -translate-y-1/2"></i>
