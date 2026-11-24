@@ -137,18 +137,18 @@
         <button id="manage-agents-btn" onclick="openModal('agents-modal')" class="hidden px-2.5 py-2 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 text-xs font-bold transition items-center gap-1.5 whitespace-nowrap" title="Manage Team, Roles &amp; Invite Links">
           <i data-lucide="users" class="w-3.5 h-3.5"></i>
           <span class="hidden sm:inline">Team &amp; Invites</span>
-        </button>
-
+      <!-- Active Role Switcher & Owner-Only Settings -->
+      <div class="flex items-center gap-2 shrink-0">
         <div class="relative">
-          <select id="role-switcher" aria-label="Switch Active User Role" class="appearance-none bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold pl-2.5 pr-6 py-2 rounded-xl border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer max-w-[155px] sm:max-w-[210px] truncate">
+          <select id="role-switcher" aria-label="Switch Active User Role" class="appearance-none bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold pl-2.5 pr-6 py-2 rounded-xl border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer max-w-[165px] sm:max-w-[215px] truncate">
             <!-- Populated dynamically by renderRoleSwitcher() -->
           </select>
           <i data-lucide="chevrons-up-down" class="w-3.5 h-3.5 text-slate-400 pointer-events-none absolute right-2 top-1/2 -translate-y-1/2"></i>
         </div>
 
-        <button id="owner-settings-btn" onclick="openModal('settings-modal')" title="Owner Settings: Branding, Support &amp; Reset" class="hidden p-2 sm:px-2.5 sm:py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700 text-xs font-bold transition items-center gap-1.5 shrink-0">
+        <button id="owner-settings-btn" onclick="openModal('settings-modal')" title="Owner Settings: Branding, Team &amp; Invites, Support &amp; Reset" class="hidden p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700 text-xs font-bold transition items-center gap-1.5 shrink-0">
           <i data-lucide="settings" class="w-4 h-4 text-emerald-400"></i>
-          <span class="hidden md:inline">Settings</span>
+          <span class="hidden sm:inline">Settings</span>
         </button>
       </div>
     </div>
@@ -2734,22 +2734,240 @@
       }
 
       if (modalType === 'agents-modal') {
-        const roster = Object.values(state.agents);
+        openSettingsModal('team');
+        return;
+      }
+
+      if (modalType === 'accept-invite-modal') {
+        const invite = state.invites.find(i => i.token === payload.token && i.status === 'ACTIVE');
+        if (!invite) {
+          emitLiveEvent('Invite Invalid', 'This single-use invite token has already been redeemed or expired.', 'rose');
+          return;
+        }
         root.innerHTML = `
-          <div class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-            <div class="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-200 my-auto">
-              <div class="bg-slate-950 text-white px-6 py-4 flex items-center justify-between">
-                <div class="flex items-center gap-2.5">
-                  <i data-lucide="users" class="w-5 h-5 text-indigo-400"></i>
-                  <div>
-                    <h3 class="text-base font-extrabold">Team Roster &amp; Single-Use Invite Links</h3>
-                    <p class="text-xs text-slate-400">Onboard freelance partners, promote Co-Owners/Admins, or deactivate access</p>
-                  </div>
-                </div>
+          <div class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200">
+              <div class="bg-indigo-950 text-white px-6 py-4 flex items-center justify-between">
+                <h3 class="text-base font-extrabold">Accept Dealership Partner Invite</h3>
                 <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
               </div>
+              <form onsubmit="submitAcceptInviteForm(event, '${invite.token}')" class="p-6 space-y-4">
+                <div class="p-3.5 rounded-2xl bg-indigo-50 border border-indigo-200 text-xs text-indigo-900">
+                  Joining <strong>${(state.branding && state.branding.dealershipName) || 'Magief Cars'}</strong> using single-use token <strong class="font-mono">${invite.token}</strong>.
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Your Full Name *</label>
+                  <input name="agentName" required value="${invite.note.split('-')[0].trim()}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Mobile Number (GCash / Viber) *</label>
+                  <input name="agentPhone" required placeholder="0917-XXX-XXXX" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs" />
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                  <button type="button" onclick="closeModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">Cancel</button>
+                  <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold">Activate Agent Account</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        `;
+      }
 
-              <div class="p-6 space-y-6">
+      lucide.createIcons();
+    }
+
+    // Owner-Only Settings Hub (Brand Customizations, Team & Invites, AutoBook Support & Workspace Reset)
+    function openSettingsModal(activeSection = 'branding') {
+      const user = getCurrentUser();
+      if (user.role !== 'OWNER') {
+        emitLiveEvent('Owner Access Only', 'Settings are restricted to Dealership Owners and Admins.', 'rose');
+        return;
+      }
+
+      const b = state.branding || getDefaultBranding();
+      const activeThemeObj = b.themeKey === 'custom'
+        ? buildCustomThemeFromHex(b.customHex || '#0f766e')
+        : (BRAND_THEMES[b.themeKey] || BRAND_THEMES.emerald);
+      const roster = Object.values(state.agents);
+
+      const root = document.getElementById('modal-root');
+      root.innerHTML = `
+        <div class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div class="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-200 my-auto">
+            <!-- Header -->
+            <div class="bg-slate-950 text-white px-6 py-4 flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <i data-lucide="settings" class="w-5 h-5 text-emerald-400"></i>
+                <div>
+                  <h3 class="text-base font-extrabold">Dealership Settings &amp; Administration</h3>
+                  <p class="text-xs text-slate-400">Manage brand theme, team &amp; invites, AutoBook support, or demo reset</p>
+                </div>
+              </div>
+              <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <!-- Settings Navigation Tabs -->
+            <div class="bg-slate-100 px-6 pt-3 border-b border-slate-200 flex items-center gap-2 overflow-x-auto no-scrollbar">
+              <button type="button" onclick="openSettingsModal('branding')" class="px-3.5 py-2 rounded-t-xl text-xs font-bold border-b-2 transition flex items-center gap-1.5 whitespace-nowrap ${
+                activeSection === 'branding'
+                  ? 'bg-white text-slate-900 border-emerald-600 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900 border-transparent'
+              }">
+                <i data-lucide="palette" class="w-3.5 h-3.5 text-emerald-600"></i>
+                <span>Brand &amp; Customizations</span>
+              </button>
+
+              <button type="button" onclick="openSettingsModal('team')" class="px-3.5 py-2 rounded-t-xl text-xs font-bold border-b-2 transition flex items-center gap-1.5 whitespace-nowrap ${
+                activeSection === 'team'
+                  ? 'bg-white text-slate-900 border-indigo-600 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900 border-transparent'
+              }">
+                <i data-lucide="users" class="w-3.5 h-3.5 text-indigo-600"></i>
+                <span>Team &amp; Invites</span>
+              </button>
+
+              <button type="button" onclick="openSettingsModal('support')" class="px-3.5 py-2 rounded-t-xl text-xs font-bold border-b-2 transition flex items-center gap-1.5 whitespace-nowrap ${
+                activeSection === 'support'
+                  ? 'bg-white text-slate-900 border-sky-600 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900 border-transparent'
+              }">
+                <i data-lucide="headset" class="w-3.5 h-3.5 text-sky-600"></i>
+                <span>Customer Support</span>
+              </button>
+
+              <button type="button" onclick="openSettingsModal('reset')" class="px-3.5 py-2 rounded-t-xl text-xs font-bold border-b-2 transition flex items-center gap-1.5 whitespace-nowrap ${
+                activeSection === 'reset'
+                  ? 'bg-white text-slate-900 border-rose-600 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900 border-transparent'
+              }">
+                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-rose-600"></i>
+                <span>Reset Data</span>
+              </button>
+            </div>
+
+            <!-- Section 1: Brand & Customizations -->
+            ${activeSection === 'branding' ? `
+              <form onsubmit="submitBrandingForm(event)" class="p-6 space-y-5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Company / Dealership Name *</label>
+                    <input name="dealershipName" required value="${escapeHtml(b.dealershipName)}" placeholder="e.g., Magief Cars" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Address / Lot Branch</label>
+                    <input name="tagline" value="${escapeHtml(b.tagline)}" placeholder="e.g., Trece Martires Cavite" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold" />
+                  </div>
+                </div>
+
+                <!-- Logo Upload -->
+                <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <div id="brand-modal-logo-preview" class="w-12 h-12 rounded-2xl bg-slate-900 text-emerald-400 flex items-center justify-center overflow-hidden shrink-0 border border-slate-300">
+                      ${b.logoUrl
+                        ? `<img src="${b.logoUrl}" alt="Dealership Logo" class="w-full h-full object-cover" />`
+                        : `<i data-lucide="car-front" class="w-6 h-6"></i>`}
+                    </div>
+                    <div class="min-w-0">
+                      <div class="text-xs font-extrabold text-slate-900">Company Logo</div>
+                      <div class="text-[11px] text-slate-500">Square PNG/JPG recommended (auto-compressed)</div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    <label class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold cursor-pointer transition">
+                      <span>Upload Logo</span>
+                      <input type="file" accept="image/*" class="hidden" onchange="handleBrandLogoUpload(event)" />
+                    </label>
+                    ${b.logoUrl ? `
+                      <button type="button" onclick="clearBrandLogo()" class="px-2.5 py-2 rounded-xl bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 text-xs font-bold">
+                        Remove
+                      </button>
+                    ` : ''}
+                  </div>
+                </div>
+
+                <!-- Brand Accent Color Theme -->
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-2">Company Brand Accent Color</label>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    ${Object.entries(BRAND_THEMES).map(([key, th]) => `
+                      <label class="flex items-center justify-between p-3 rounded-2xl border-2 cursor-pointer transition ${
+                        b.themeKey === key ? 'border-slate-900 bg-slate-50' : 'border-slate-200 hover:border-slate-300'
+                      }">
+                        <div class="flex items-center gap-2.5">
+                          <input type="radio" name="themeKey" value="${key}" ${b.themeKey === key ? 'checked' : ''} onchange="previewBrandThemeChoice('${key}')" class="accent-slate-900" />
+                          <span class="text-xs font-bold text-slate-800">${th.name.replace(' (Default)', '')}</span>
+                        </div>
+                        <span class="w-6 h-6 rounded-full border border-black/10 shadow-inner shrink-0" style="background-color: ${th.c600};"></span>
+                      </label>
+                    `).join('')}
+
+                    <label class="flex items-center justify-between p-3 rounded-2xl border-2 cursor-pointer transition ${
+                      b.themeKey === 'custom' ? 'border-slate-900 bg-slate-50' : 'border-slate-200 hover:border-slate-300'
+                    }">
+                      <div class="flex items-center gap-2.5">
+                        <input id="brand-theme-custom-radio" type="radio" name="themeKey" value="custom" ${b.themeKey === 'custom' ? 'checked' : ''} onchange="previewBrandThemeChoice('custom')" class="accent-slate-900" />
+                        <span class="text-xs font-bold text-slate-800">Custom Color</span>
+                      </div>
+                      <span id="brand-custom-swatch" class="w-6 h-6 rounded-full border border-black/15 shadow-inner shrink-0" style="background-color: ${escapeHtml(b.customHex || '#0f766e')};"></span>
+                    </label>
+                  </div>
+
+                  <div class="mt-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5">
+                      <input
+                        id="brand-custom-color-picker"
+                        type="color"
+                        value="${escapeHtml(b.customHex || '#0f766e')}"
+                        oninput="handleCustomBrandHexChange(this.value)"
+                        class="w-9 h-9 rounded-xl border border-slate-300 cursor-pointer bg-transparent p-0.5"
+                      />
+                      <div>
+                        <div class="text-xs font-extrabold text-slate-900">Custom Brand Hex</div>
+                        <div class="text-[11px] text-slate-500">Auto-generates tints &amp; legible contrast</div>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <input
+                        id="brand-custom-hex-text"
+                        name="customHex"
+                        type="text"
+                        maxlength="7"
+                        value="${escapeHtml((b.customHex || '#0f766e').toUpperCase())}"
+                        oninput="handleCustomBrandHexText(this.value)"
+                        class="w-24 px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-mono font-bold uppercase text-slate-800"
+                      />
+                      <span id="brand-live-button-preview" class="px-3 py-1.5 rounded-xl text-[11px] font-bold shadow-sm" style="background-color: ${activeThemeObj.c600}; color: ${activeThemeObj.onPrimary};">
+                        Button Preview
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Typography Choice -->
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1.5">Portal Font Style</label>
+                  <select name="fontKey" onchange="previewBrandFontChoice(this.value)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold bg-white">
+                    ${Object.entries(BRAND_FONTS).map(([key, f]) => `
+                      <option value="${key}" ${b.fontKey === key ? 'selected' : ''}>${f.label}</option>
+                    `).join('')}
+                  </select>
+                </div>
+
+                <div class="pt-2 flex items-center justify-between gap-2">
+                  <button type="button" onclick="resetDealershipBranding()" class="px-3.5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-600">
+                    Reset Brand Default
+                  </button>
+                  <div class="flex items-center gap-2">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">Cancel</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold">Save Brand Theme</button>
+                  </div>
+                </div>
+              </form>
+            ` : ''}
+
+            <!-- Section 2: Team & Invites -->
+            ${activeSection === 'team' ? `
+              <div class="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
                 <!-- Generate Single-Use Invite Link -->
                 <div class="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200">
                   <div class="text-xs font-extrabold text-indigo-950 mb-2 flex items-center gap-1.5">
@@ -2907,299 +3125,68 @@
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        `;
-      }
-
-      if (modalType === 'accept-invite-modal') {
-        const invite = state.invites.find(i => i.token === payload.token && i.status === 'ACTIVE');
-        if (!invite) {
-          emitLiveEvent('Invite Invalid', 'This single-use invite token has already been redeemed or expired.', 'rose');
-          return;
-        }
-        root.innerHTML = `
-          <div class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-            <div class="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200">
-              <div class="bg-indigo-950 text-white px-6 py-4 flex items-center justify-between">
-                <h3 class="text-base font-extrabold">Accept Dealership Partner Invite</h3>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-              </div>
-              <form onsubmit="submitAcceptInviteForm(event, '${invite.token}')" class="p-6 space-y-4">
-                <div class="p-3.5 rounded-2xl bg-indigo-50 border border-indigo-200 text-xs text-indigo-900">
-                  Joining <strong>${(state.branding && state.branding.dealershipName) || 'Magief Cars'}</strong> using single-use token <strong class="font-mono">${invite.token}</strong>.
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Your Full Name *</label>
-                  <input name="agentName" required value="${invite.note.split('-')[0].trim()}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold" />
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Mobile Number (GCash / Viber) *</label>
-                  <input name="agentPhone" required placeholder="0917-XXX-XXXX" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs" />
-                </div>
-                <div class="pt-2 flex justify-end gap-2">
-                  <button type="button" onclick="closeModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">Cancel</button>
-                  <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold">Activate Agent Account</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        `;
-      }
-
-      lucide.createIcons();
-    }
-
-    // Owner-Only Settings Hub (Brand Customizations, AutoBook Support & Workspace Reset)
-    function openSettingsModal(activeSection = 'branding') {
-      const user = getCurrentUser();
-      if (user.role !== 'OWNER') {
-        emitLiveEvent('Owner Access Only', 'Settings are restricted to Dealership Owners and Admins.', 'rose');
-        return;
-      }
-
-      const b = state.branding || getDefaultBranding();
-      const activeThemeObj = b.themeKey === 'custom'
-        ? buildCustomThemeFromHex(b.customHex || '#0f766e')
-        : (BRAND_THEMES[b.themeKey] || BRAND_THEMES.emerald);
-
-      const root = document.getElementById('modal-root');
-      root.innerHTML = `
-        <div class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div class="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-200 my-auto">
-            <!-- Header -->
-            <div class="bg-slate-950 text-white px-6 py-4 flex items-center justify-between">
-              <div class="flex items-center gap-2.5">
-                <i data-lucide="settings" class="w-5 h-5 text-emerald-400"></i>
-                <div>
-                  <h3 class="text-base font-extrabold">Dealership Settings &amp; AutoBook Support</h3>
-                  <p class="text-xs text-slate-400">Manage brand theme, reach AutoBook tech support, or reset demo data</p>
-                </div>
-              </div>
-              <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-
-            <!-- Settings Navigation Tabs -->
-            <div class="bg-slate-100 px-6 pt-3 border-b border-slate-200 flex items-center gap-2 overflow-x-auto no-scrollbar">
-              <button type="button" onclick="openSettingsModal('branding')" class="px-3.5 py-2 rounded-t-xl text-xs font-bold border-b-2 transition flex items-center gap-1.5 whitespace-nowrap ${
-                activeSection === 'branding'
-                  ? 'bg-white text-slate-900 border-emerald-600 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 border-transparent'
-              }">
-                <i data-lucide="palette" class="w-3.5 h-3.5 text-emerald-600"></i>
-                <span>Brand &amp; Customizations</span>
-              </button>
-
-              <button type="button" onclick="openSettingsModal('support')" class="px-3.5 py-2 rounded-t-xl text-xs font-bold border-b-2 transition flex items-center gap-1.5 whitespace-nowrap ${
-                activeSection === 'support'
-                  ? 'bg-white text-slate-900 border-indigo-600 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 border-transparent'
-              }">
-                <i data-lucide="headset" class="w-3.5 h-3.5 text-indigo-600"></i>
-                <span>Customer Support (AutoBook)</span>
-              </button>
-
-              <button type="button" onclick="openSettingsModal('reset')" class="px-3.5 py-2 rounded-t-xl text-xs font-bold border-b-2 transition flex items-center gap-1.5 whitespace-nowrap ${
-                activeSection === 'reset'
-                  ? 'bg-white text-slate-900 border-rose-600 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 border-transparent'
-              }">
-                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-rose-600"></i>
-                <span>Reset Data</span>
-              </button>
-            </div>
-
-            <!-- Section 1: Brand & Customizations -->
-            ${activeSection === 'branding' ? `
-              <form onsubmit="submitBrandingForm(event)" class="p-6 space-y-5">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Company / Dealership Name *</label>
-                    <input name="dealershipName" required value="${escapeHtml(b.dealershipName)}" placeholder="e.g., Magief Cars" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold" />
-                  </div>
-                  <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Address / Lot Branch</label>
-                    <input name="tagline" value="${escapeHtml(b.tagline)}" placeholder="e.g., Trece Martires Cavite" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold" />
-                  </div>
-                </div>
-
-                <!-- Logo Upload -->
-                <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
-                  <div class="flex items-center gap-3 min-w-0">
-                    <div id="brand-modal-logo-preview" class="w-12 h-12 rounded-2xl bg-slate-900 text-emerald-400 flex items-center justify-center overflow-hidden shrink-0 border border-slate-300">
-                      ${b.logoUrl
-                        ? `<img src="${b.logoUrl}" alt="Dealership Logo" class="w-full h-full object-cover" />`
-                        : `<i data-lucide="car-front" class="w-6 h-6"></i>`}
-                    </div>
-                    <div class="min-w-0">
-                      <div class="text-xs font-extrabold text-slate-900">Company Logo</div>
-                      <div class="text-[11px] text-slate-500">Square PNG/JPG recommended (auto-compressed)</div>
-                    </div>
-                  </div>
-                  <div class="flex items-center gap-1.5 shrink-0">
-                    <label class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold cursor-pointer transition">
-                      <span>Upload Logo</span>
-                      <input type="file" accept="image/*" class="hidden" onchange="handleBrandLogoUpload(event)" />
-                    </label>
-                    ${b.logoUrl ? `
-                      <button type="button" onclick="clearBrandLogo()" class="px-2.5 py-2 rounded-xl bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 text-xs font-bold">
-                        Remove
-                      </button>
-                    ` : ''}
-                  </div>
-                </div>
-
-                <!-- Brand Accent Color Theme -->
-                <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-2">Company Brand Accent Color</label>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    ${Object.entries(BRAND_THEMES).map(([key, th]) => `
-                      <label class="flex items-center justify-between p-3 rounded-2xl border-2 cursor-pointer transition ${
-                        b.themeKey === key ? 'border-slate-900 bg-slate-50' : 'border-slate-200 hover:border-slate-300'
-                      }">
-                        <div class="flex items-center gap-2.5">
-                          <input type="radio" name="themeKey" value="${key}" ${b.themeKey === key ? 'checked' : ''} onchange="previewBrandThemeChoice('${key}')" class="accent-slate-900" />
-                          <span class="text-xs font-bold text-slate-800">${th.name.replace(' (Default)', '')}</span>
-                        </div>
-                        <span class="w-6 h-6 rounded-full border border-black/10 shadow-inner shrink-0" style="background-color: ${th.c600};"></span>
-                      </label>
-                    `).join('')}
-
-                    <label class="flex items-center justify-between p-3 rounded-2xl border-2 cursor-pointer transition ${
-                      b.themeKey === 'custom' ? 'border-slate-900 bg-slate-50' : 'border-slate-200 hover:border-slate-300'
-                    }">
-                      <div class="flex items-center gap-2.5">
-                        <input id="brand-theme-custom-radio" type="radio" name="themeKey" value="custom" ${b.themeKey === 'custom' ? 'checked' : ''} onchange="previewBrandThemeChoice('custom')" class="accent-slate-900" />
-                        <span class="text-xs font-bold text-slate-800">Custom Color</span>
-                      </div>
-                      <span id="brand-custom-swatch" class="w-6 h-6 rounded-full border border-black/15 shadow-inner shrink-0" style="background-color: ${escapeHtml(b.customHex || '#0f766e')};"></span>
-                    </label>
-                  </div>
-
-                  <div class="mt-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-3">
-                    <div class="flex items-center gap-2.5">
-                      <input
-                        id="brand-custom-color-picker"
-                        type="color"
-                        value="${escapeHtml(b.customHex || '#0f766e')}"
-                        oninput="handleCustomBrandHexChange(this.value)"
-                        class="w-9 h-9 rounded-xl border border-slate-300 cursor-pointer bg-transparent p-0.5"
-                      />
-                      <div>
-                        <div class="text-xs font-extrabold text-slate-900">Custom Brand Hex</div>
-                        <div class="text-[11px] text-slate-500">Auto-generates tints &amp; legible contrast</div>
-                      </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <input
-                        id="brand-custom-hex-text"
-                        name="customHex"
-                        type="text"
-                        maxlength="7"
-                        value="${escapeHtml((b.customHex || '#0f766e').toUpperCase())}"
-                        oninput="handleCustomBrandHexText(this.value)"
-                        class="w-24 px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-mono font-bold uppercase text-slate-800"
-                      />
-                      <span id="brand-live-button-preview" class="px-3 py-1.5 rounded-xl text-[11px] font-bold shadow-sm" style="background-color: ${activeThemeObj.c600}; color: ${activeThemeObj.onPrimary};">
-                        Button Preview
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Typography Choice -->
-                <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1.5">Portal Font Style</label>
-                  <select name="fontKey" onchange="previewBrandFontChoice(this.value)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold bg-white">
-                    ${Object.entries(BRAND_FONTS).map(([key, f]) => `
-                      <option value="${key}" ${b.fontKey === key ? 'selected' : ''}>${f.label}</option>
-                    `).join('')}
-                  </select>
-                </div>
-
-                <div class="pt-2 flex items-center justify-between gap-2">
-                  <button type="button" onclick="resetDealershipBranding()" class="px-3.5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-600">
-                    Reset Brand Default
-                  </button>
-                  <div class="flex items-center gap-2">
-                    <button type="button" onclick="closeModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">Cancel</button>
-                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold">Save Brand Theme</button>
-                  </div>
-                </div>
-              </form>
             ` : ''}
 
-            <!-- Section 2: Customer Support (AutoBook Support Desk) -->
+            <!-- Section 3: Customer Support (AutoBook Support Desk) -->
             ${activeSection === 'support' ? `
-              <div class="p-6 space-y-5">
-                <div class="p-4 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-start gap-3">
-                  <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shrink-0">
+              <div class="p-6 space-y-4">
+                <div class="p-4 rounded-2xl bg-sky-50 border border-sky-200 flex items-start gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center shrink-0">
                     <i data-lucide="headset" class="w-5 h-5"></i>
                   </div>
                   <div>
-                    <div class="text-sm font-extrabold text-indigo-950">AutoBook Direct Partner Support</div>
-                    <p class="text-xs text-indigo-800 mt-0.5 leading-relaxed">
-                      Need help setting up your dealership, fixing a viewing lock, or requesting a custom workflow? Reach out directly to our AutoBook tech support desk.
+                    <h4 class="text-sm font-extrabold text-slate-900">AutoBook Direct Partner Support</h4>
+                    <p class="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                      Need help adding vehicles, onboarding new agents, adjusting commission rules, or reporting a bug? Contact AutoBook support directly for immediate assistance.
                     </p>
                   </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                  <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1.5">
                     <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Direct Hotline / Viber / WhatsApp</div>
-                    <div class="text-base font-extrabold text-slate-900 mt-1">AutoBook</div>
-                    <div class="text-xs font-bold text-emerald-700 mt-0.5">0917-100-0001 • Partner Support Desk</div>
-                    <button type="button" onclick="copySupportNumber('0917-100-0001')" class="mt-3 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 font-bold text-[11px] text-slate-800 inline-flex items-center gap-1.5">
-                      <i data-lucide="copy" class="w-3.5 h-3.5 text-emerald-600"></i>
+                    <div class="text-base font-extrabold text-slate-900">AutoBook</div>
+                    <div class="text-xs font-bold text-indigo-700">0917-100-0001 • Partner Support Desk</div>
+                    <button type="button" onclick="copySupportPhone()" class="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-xs font-bold text-slate-800">
+                      <i data-lucide="copy" class="w-3.5 h-3.5 text-indigo-600"></i>
                       <span>Copy Support Number</span>
                     </button>
                   </div>
 
-                  <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                    <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Support Hours &amp; SLA</div>
-                    <div class="text-sm font-extrabold text-slate-900 mt-1">Mon – Sun • 8:00 AM – 9:00 PM</div>
-                    <div class="text-[11px] text-slate-600 mt-1">Priority response for active lot issues, booking conflicts, and agent onboarding.</div>
+                  <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1.5">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Priority Issue Escalation</div>
+                    <div class="text-sm font-extrabold text-slate-900">Fast-Track Dealership SLA</div>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                      • Calendar or slot lock sync issues<br/>
+                      • Custom domain &amp; dealership branding<br/>
+                      • Agent account recovery &amp; audit logs
+                    </p>
                   </div>
                 </div>
 
-                <form onsubmit="submitSupportTicket(event)" class="space-y-3 border-t border-slate-100 pt-4">
-                  <div class="text-xs font-extrabold text-slate-900">Send Quick Issue / Bug Report to AutoBook</div>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <select name="issueCategory" class="px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold bg-white">
-                      <option value="Bug / Something Broken">Bug / Something Broken</option>
-                      <option value="Viewing Lock / Calendar Issue">Viewing Lock / Calendar Issue</option>
-                      <option value="Agent Account / Invite Help">Agent Account / Invite Help</option>
-                      <option value="Feature Request">Feature Request</option>
-                    </select>
-                    <input name="contactBack" required value="${escapeHtml(user.phone || '0917-100-0001')}" placeholder="Best callback number" class="px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold" />
-                  </div>
-                  <textarea name="issueMessage" rows="3" required placeholder="Describe what happened so AutoBook support can fix it right away..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs"></textarea>
-                  <div class="flex justify-end gap-2">
-                    <button type="button" onclick="closeModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">Close</button>
-                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold">Send to AutoBook Support</button>
-                  </div>
-                </form>
+                <div class="pt-2 flex justify-end">
+                  <button type="button" onclick="closeModal()" class="px-5 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold">Done</button>
+                </div>
               </div>
             ` : ''}
 
-            <!-- Section 3: Reset Demo Data -->
+            <!-- Section 4: Reset Demo / Workspace Data -->
             ${activeSection === 'reset' ? `
               <div class="p-6 space-y-4">
-                <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-900 space-y-1.5">
-                  <div class="font-extrabold text-sm flex items-center gap-1.5 text-rose-800">
+                <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 space-y-2">
+                  <div class="flex items-center gap-2 text-rose-800 font-extrabold text-sm">
                     <i data-lucide="alert-triangle" class="w-4 h-4"></i>
-                    <span>Reset Workspace to Default Demo Data</span>
+                    <span>Reset Dealership Demo Workspace</span>
                   </div>
-                  <p class="leading-relaxed">
-                    This restores <strong>Magief Cars (Trece Martires Cavite)</strong>, the default team roster (Rv Santiago III, Ryan Paolo Santiago, Rico Donato, Marc Jamero, Jester Cabiltes, Paul Collante), and fresh sample vehicles, bookings, and sales.
+                  <p class="text-xs text-rose-900 leading-relaxed">
+                    This restores <strong>Magief Cars (Trece Martires Cavite)</strong> back to its clean initial sample vehicles, viewing bookings, sales records, and team roster. Any temporary test entries will be cleared.
                   </p>
                 </div>
 
-                <div class="flex items-center justify-end gap-2 pt-2">
+                <div class="pt-2 flex items-center justify-end gap-2">
                   <button type="button" onclick="closeModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">Cancel</button>
-                  <button type="button" onclick="confirmWorkspaceReset()" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold inline-flex items-center gap-1.5">
-                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
-                    <span>Reset Demo Data Now</span>
+                  <button type="button" onclick="resetDemoState()" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm">
+                    Confirm Reset to Default Data
                   </button>
                 </div>
               </div>
@@ -3210,42 +3197,31 @@
       lucide.createIcons();
     }
 
-    function copySupportNumber(num) {
+    function copySupportPhone() {
       const tempInput = document.createElement('input');
-      tempInput.value = num;
+      tempInput.value = '0917-100-0001';
       document.body.appendChild(tempInput);
       tempInput.select();
       document.execCommand('copy');
       document.body.removeChild(tempInput);
-      emitLiveEvent('Support Number Copied', `Copied AutoBook Support (${num}) to clipboard.`, 'indigo');
+      emitLiveEvent('Support Number Copied', 'Copied 0917-100-0001 (AutoBook Support) to clipboard.', 'indigo');
     }
 
-    function submitSupportTicket(event) {
-      event.preventDefault();
-      const fd = new FormData(event.target);
-      const category = fd.get('issueCategory');
-      closeModal();
-      emitLiveEvent(
-        'Support Alert Sent to AutoBook',
-        `Logged "${category}" — AutoBook Support will reach out shortly.`,
-        'indigo'
-      );
-    }
-
-    function confirmWorkspaceReset() {
+    function resetDemoState() {
+      localStorage.removeItem(STORAGE_KEY);
       state = createDefaultState();
       saveState();
       closeModal();
       renderApp();
-      emitLiveEvent('Workspace Data Reset', 'Restored clean Magief Cars (Trece Martires Cavite) dataset.', 'amber');
+      emitLiveEvent('Workspace Reset', 'Restored Magief Cars default inventory, bookings & team roster.', 'amber');
     }
 
     // =========================================================================
-    // INTERACTIVE ACTIONS & MUTATIONS
+    // STATE MUTATION HANDLERS (BOOKINGS, RESERVATIONS, SALES, LEADS, BRANDING)
     // =========================================================================
 
-    function switchTab(tab) {
-      state.activeTab = tab;
+    function switchTab(tabName) {
+      state.activeTab = tabName;
       saveState();
       renderApp();
     }
@@ -3256,8 +3232,8 @@
       renderApp();
     }
 
-    function setSearchQuery(q) {
-      state.searchQuery = q;
+    function setSearchQuery(query) {
+      state.searchQuery = query;
       renderApp();
     }
 
@@ -3280,18 +3256,17 @@
     }
 
     function exportSalesLedgerCSV() {
-      const headers = ['Sale ID', 'Vehicle', 'Agent', 'Payout Structure', 'Base Price (PHP)', 'Reported Sale Price (PHP)', 'Agent Payout (PHP)', 'Status', 'Submitted At'];
+      const headers = ['Sale ID', 'Vehicle', 'Closing Agent', 'Payout Structure', 'Base Price (PHP)', 'Reported Sale Price (PHP)', 'Agent Payout (PHP)', 'Status'];
       const rows = state.sales.map(s => {
-        const agent = getUserRecord(s.agentId)?.name || s.agentId;
+        const agentName = getUserRecord(s.agentId)?.name || s.agentId;
         const reported = s.payoutModel === 'MARKUP' ? 'Private (Patong)' : (s.reportedSalePrice || s.basePriceSnapshot);
         const payout = s.payoutModel === 'MARKUP' ? 'Private Patong' : s.calculatedPayout;
-        return [s.id, s.carTitle, agent, s.payoutModel, s.basePriceSnapshot, reported, payout, s.status, s.submittedAt]
-          .map(val => `"${String(val).replace(/"/g, '""')}"`)
-          .join(',');
+        return [s.id, `"${s.carTitle}"`, `"${agentName}"`, s.payoutModel, s.basePriceSnapshot, `"${reported}"`, `"${payout}"`, s.status].join(',');
       });
       const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows].join('\n');
+      const encodedUri = encodeURI(csvContent);
       const link = document.createElement('a');
-      link.setAttribute('href', encodeURI(csvContent));
+      link.setAttribute('href', encodedUri);
       link.setAttribute('download', `magief-cars-ledger-${getDateOffsetStr(0)}.csv`);
       document.body.appendChild(link);
       link.click();
@@ -3421,7 +3396,7 @@
         usedByName: null
       });
       saveState();
-      openModal('agents-modal');
+      openSettingsModal('team');
       emitLiveEvent('Invite Token Generated', `Created single-use token ${randomCode} for ${note}.`, 'indigo');
     }
 
@@ -3484,7 +3459,7 @@
         member.role = 'OWNER';
         member.label = 'Co-owner';
         saveState();
-        openModal('agents-modal');
+        openSettingsModal('team');
         renderApp();
         emitLiveEvent(
           'Promoted to Co-Owner',
@@ -3495,7 +3470,7 @@
         member.role = 'OWNER';
         member.label = 'Admin';
         saveState();
-        openModal('agents-modal');
+        openSettingsModal('team');
         renderApp();
         emitLiveEvent(
           'Updated to Admin',
@@ -3506,7 +3481,7 @@
         member.role = 'AGENT';
         member.label = 'Agent';
         saveState();
-        openModal('agents-modal');
+        openSettingsModal('team');
         renderApp();
         emitLiveEvent(
           'Set to Sales Agent',
@@ -3544,7 +3519,7 @@
         }
 
         saveState();
-        openModal('agents-modal');
+        openSettingsModal('team');
         renderApp();
         emitLiveEvent(
           'Agent Deactivated',
@@ -3553,7 +3528,7 @@
         );
       } else {
         saveState();
-        openModal('agents-modal');
+        openSettingsModal('team');
         renderApp();
         emitLiveEvent('Agent Reactivated', `${member.name} restored to active dealership roster.`, 'emerald');
       }
@@ -3954,9 +3929,8 @@
       const user = getCurrentUser();
       const root = document.getElementById('app-root');
 
-      // Show/Hide Owner/Admin-only Settings & Team controls
+      // Show/Hide Owner/Admin-only Settings button
       const settingsBtn = document.getElementById('owner-settings-btn');
-      const manageBtn = document.getElementById('manage-agents-btn');
       if (settingsBtn) {
         if (user.role === 'OWNER') {
           settingsBtn.classList.remove('hidden');
@@ -3964,15 +3938,6 @@
         } else {
           settingsBtn.classList.add('hidden');
           settingsBtn.classList.remove('inline-flex');
-        }
-      }
-      if (manageBtn) {
-        if (user.role === 'OWNER') {
-          manageBtn.classList.remove('hidden');
-          manageBtn.classList.add('inline-flex');
-        } else {
-          manageBtn.classList.add('hidden');
-          manageBtn.classList.remove('inline-flex');
         }
       }
 
