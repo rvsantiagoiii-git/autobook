@@ -148,7 +148,7 @@
           Default Comm: 2.0%
         </span>
         <span id="header-incentive-badge" class="px-2.5 py-0.5 rounded-md bg-indigo-950/90 border border-indigo-500/40 text-indigo-300 font-bold">
-          Finder's Fee: 1.0% – 3.0%
+          Finder's Fee: ₱3,000 – ₱10,000
         </span>
       </div>
     </div>
@@ -185,7 +185,7 @@
     // =========================================================================
     // 1. CONSTANTS, ROSTER & RBAC HELPERS
     // =========================================================================
-    const STORAGE_KEY = 'autobook_v2_2_magief_cars_complete';
+    const STORAGE_KEY = 'autobook_v2_3_magief_cars_fixed_finders_fee';
 
     const DEFAULT_BRANDING = {
       dealershipName: 'Magief Cars',
@@ -228,12 +228,12 @@
       return {
         enabled: true,
         mode: 'TIERED',
-        flatRate: 2.0,
-        tier1Max: 650000,   // Under ₱650k -> 1.0%
-        tier1Rate: 1.0,
-        tier2Max: 1200000,  // ₱650k - ₱1.19M -> 2.0%
-        tier2Rate: 2.0,
-        tier3Rate: 3.0      // ₱1.2M+ -> 3.0%
+        flatAmount: 5000,
+        tier1Max: 650000,    // Under ₱650k -> ₱3,000
+        tier1Amount: 3000,
+        tier2Max: 1200000,   // ₱650k - ₱1.19M -> ₱6,000
+        tier2Amount: 6000,
+        tier3Amount: 10000   // ₱1.2M+ -> ₱10,000
       };
     }
 
@@ -516,13 +516,13 @@
             basePrice: 1380000,
             status: 'Ready for Release',
             sourcedByAgentId: 'agent_jester',
-            finderFeePercent: 3.0,
+            finderFeeAmount: 10000,
             finderFeeAutoScaled: true,
             priorityLockUntil: Date.now() + (38 * 60 * 60 * 1000),
             soldAt: null,
             soldByAgentId: null,
             photos: [
-              { label: 'Front 3/4 Exterior', url: makeCarSamplePhoto('2023 Mitsubishi Montero Sport GLS', '#065f46', '#34d399', 'TIER 3 • 3.0% SCOUT') },
+              { label: 'Front 3/4 Exterior', url: makeCarSamplePhoto('2023 Mitsubishi Montero Sport GLS', '#065f46', '#34d399', 'TIER 3 • ₱10,000 SCOUT') },
               { label: 'Cabin & Infotainment', url: makeCarSamplePhoto('Montero Sport GLS Leather Cabin', '#1e293b', '#38bdf8', 'INTERIOR CABIN') },
               { label: '2.4L MIVEC Turbo Diesel', url: makeCarSamplePhoto('Clean 2.4L MIVEC Diesel Engine', '#1e1b4b', '#a78bfa', 'ENGINE BAY') }
             ],
@@ -551,7 +551,7 @@
             basePrice: 1080000,
             status: 'Reserved',
             sourcedByAgentId: 'agent_paul',
-            finderFeePercent: 2.0,
+            finderFeeAmount: 6000,
             finderFeeAutoScaled: true,
             priorityLockUntil: null,
             soldAt: null,
@@ -595,7 +595,7 @@
             basePrice: 618000,
             status: 'Ready for Release',
             sourcedByAgentId: null,
-            finderFeePercent: 0,
+            finderFeeAmount: 0,
             priorityLockUntil: null,
             soldAt: null,
             soldByAgentId: null,
@@ -627,13 +627,13 @@
             basePrice: 1080000,
             status: 'Ready for Release',
             sourcedByAgentId: 'agent_paul',
-            finderFeePercent: 2.0,
+            finderFeeAmount: 6000,
             finderFeeAutoScaled: true,
             priorityLockUntil: null,
             soldAt: null,
             soldByAgentId: null,
             photos: [
-              { label: 'Front 3/4 Exterior', url: makeCarSamplePhoto('2021 Honda Civic RS Turbo CVT', '#7f1d1d', '#fca5a5', 'TIER 2 • 2.0% SCOUT') }
+              { label: 'Front 3/4 Exterior', url: makeCarSamplePhoto('2021 Honda Civic RS Turbo CVT', '#7f1d1d', '#fca5a5', 'TIER 2 • ₱6,000 SCOUT') }
             ],
             checklist: {
               orcr_docs: true, no_lto_alarm: true, open_deed_ids: true,
@@ -660,13 +660,13 @@
             basePrice: 430000,
             status: 'Reconditioning / PMS',
             sourcedByAgentId: 'agent_paul',
-            finderFeePercent: 1.0,
+            finderFeeAmount: 3000,
             finderFeeAutoScaled: true,
             priorityLockUntil: Date.now() + (44 * 60 * 60 * 1000),
             soldAt: null,
             soldByAgentId: null,
             photos: [
-              { label: 'Recon / PMS Bay', url: makeCarSamplePhoto('2020 Mitsubishi Mirage G4 GLX 1.2G AT', '#78350f', '#fbbf24', 'TIER 1 • 1.0% SCOUT') }
+              { label: 'Recon / PMS Bay', url: makeCarSamplePhoto('2020 Mitsubishi Mirage G4 GLX 1.2G AT', '#78350f', '#fbbf24', 'TIER 1 • ₱3,000 SCOUT') }
             ],
             checklist: {
               orcr_docs: true, no_lto_alarm: true, open_deed_ids: true,
@@ -692,7 +692,7 @@
             basePrice: 1385000,
             status: 'Detailing',
             sourcedByAgentId: 'agent_jester',
-            finderFeePercent: 3.0,
+            finderFeeAmount: 10000,
             finderFeeAutoScaled: true,
             priorityLockUntil: null,
             soldAt: null,
@@ -724,13 +724,13 @@
             basePrice: 1350000,
             status: 'Sold',
             sourcedByAgentId: 'agent_paul',
-            finderFeePercent: 2.5,
+            finderFeeAmount: 10000,
             finderFeeAutoScaled: false,
             priorityLockUntil: null,
             soldAt: today,
             soldByAgentId: 'agent_jester',
             photos: [
-              { label: 'Sold Showroom Unit', url: makeCarSamplePhoto('2022 Toyota Fortuner 2.4 G (SOLD)', '#334155', '#94a3b8', '2.5% FINDER SOLD') }
+              { label: 'Sold Showroom Unit', url: makeCarSamplePhoto('2022 Toyota Fortuner 2.4 G (SOLD)', '#334155', '#94a3b8', '₱10K FINDER SOLD') }
             ],
             checklist: {
               orcr_docs: true, no_lto_alarm: true, open_deed_ids: true,
@@ -756,7 +756,7 @@
             basePrice: 660000,
             status: 'Sold',
             sourcedByAgentId: 'agent_jester',
-            finderFeePercent: 2.0,
+            finderFeeAmount: 6000,
             finderFeeAutoScaled: true,
             priorityLockUntil: null,
             soldAt: today,
@@ -812,9 +812,9 @@
             buyerName: 'Mr. Carlo Mendoza',
             agentId: 'agent_jester',
             sourcedByAgentId: 'agent_paul',
-            finderFeePercent: 2.5,
             sourcingPriceBasis: 1350000,
-            sourcingBonus: 33750,
+            sourcingTierLabel: 'Tier 3 (₱1.2M+)',
+            sourcingBonus: 10000,
             sourcingBonusReleased: false,
             payoutModel: 'MARKUP',
             basePriceSnapshot: 1350000,
@@ -839,9 +839,9 @@
             buyerName: 'Ms. Bea Alonzo-Reyes',
             agentId: 'agent_jester',
             sourcedByAgentId: 'agent_jester',
-            finderFeePercent: 2.0,
             sourcingPriceBasis: 660000,
-            sourcingBonus: 13200,
+            sourcingTierLabel: 'Tier 2 (₱650k–₱1.19M)',
+            sourcingBonus: 6000,
             sourcingBonusReleased: false,
             payoutModel: 'COMMISSION',
             basePriceSnapshot: 660000,
@@ -870,7 +870,7 @@
             askingPrice: 1180000,
             estRecon: 15000,
             targetFloorPrice: 1250000,
-            finderFeePercent: 3.0,
+            finderFeeAmount: 10000,
             sellerName: 'Mr. Gregorio Bautista',
             sellerPhone: '0917-890-3411',
             location: 'Trece Martires / General Trias, Cavite',
@@ -887,7 +887,7 @@
             askingPrice: 365000,
             estRecon: 10000,
             targetFloorPrice: 410000,
-            finderFeePercent: 1.0,
+            finderFeeAmount: 3000,
             sellerName: 'Patricia Ocampo',
             sellerPhone: '0918-309-1127',
             location: 'Tagaytay / Silang, Cavite',
@@ -931,64 +931,57 @@
     }
 
     // =========================================================================
-    // 3. DOMAIN HELPERS (ADJUSTABLE 1.0% - 3.0% FINDER'S FEE & PRICING)
+    // 3. DOMAIN HELPERS (FIXED ₱3,000 - ₱10,000 FINDER'S FEE & PRICING)
     // =========================================================================
-    function clampFindersRate(rate) {
-      const n = Number(rate);
-      if (Number.isNaN(n)) return 1.0;
-      const clamped = Math.min(3.0, Math.max(1.0, n));
-      return Math.round(clamped * 2) / 2; // 0.5% steps: 1.0%, 1.5%, 2.0%, 2.5%, 3.0%
+    function clampFindersAmount(amount) {
+      const n = Number(amount);
+      if (Number.isNaN(n)) return 3000;
+      const clamped = Math.min(10000, Math.max(3000, n));
+      return Math.round(clamped / 500) * 500; // ₱500 steps between ₱3,000 and ₱10,000
     }
 
-    function getAutoTieredFindersRate(carPrice) {
+    function getAutoTieredFindersAmount(carPrice) {
       const cfg = { ...getDefaultSourcingIncentiveConfig(), ...(state.sourcingIncentive || {}) };
       if (!cfg.enabled) return 0;
       if (cfg.mode === 'FLAT') {
-        return clampFindersRate(cfg.flatRate);
+        return clampFindersAmount(cfg.flatAmount);
       }
       const price = Math.max(0, Number(carPrice) || 0);
       if (price < (Number(cfg.tier1Max) || 650000)) {
-        return clampFindersRate(cfg.tier1Rate);
+        return clampFindersAmount(cfg.tier1Amount);
       }
       if (price < (Number(cfg.tier2Max) || 1200000)) {
-        return clampFindersRate(cfg.tier2Rate);
+        return clampFindersAmount(cfg.tier2Amount);
       }
-      return clampFindersRate(cfg.tier3Rate);
+      return clampFindersAmount(cfg.tier3Amount);
     }
 
     function getPriceTierLabel(carPrice) {
       const cfg = { ...getDefaultSourcingIncentiveConfig(), ...(state.sourcingIncentive || {}) };
       if (!cfg.enabled) return 'Disabled';
-      if (cfg.mode === 'FLAT') return 'Flat Rate';
+      if (cfg.mode === 'FLAT') return 'Flat Fixed Fee';
       const price = Math.max(0, Number(carPrice) || 0);
       if (price < (Number(cfg.tier1Max) || 650000)) return 'Tier 1 (<₱650k)';
       if (price < (Number(cfg.tier2Max) || 1200000)) return 'Tier 2 (₱650k–₱1.19M)';
       return 'Tier 3 (₱1.2M+)';
     }
 
-    function getCarFindersRate(car) {
+    function getCarFindersFeeAmount(car) {
       if (!car || !car.sourcedByAgentId) return 0;
       if (!state.sourcingIncentive?.enabled) return 0;
-      if (car.finderFeePercent != null && !Number.isNaN(Number(car.finderFeePercent)) && Number(car.finderFeePercent) > 0) {
-        return clampFindersRate(car.finderFeePercent);
+      if (car.finderFeeAmount != null && !Number.isNaN(Number(car.finderFeeAmount)) && Number(car.finderFeeAmount) > 0) {
+        return clampFindersAmount(car.finderFeeAmount);
       }
-      return getAutoTieredFindersRate(car.basePrice);
-    }
-
-    function getCarFindersFeeAmount(car, priceBasisOverride = null) {
-      const rate = getCarFindersRate(car);
-      if (!rate) return 0;
-      const basis = Math.max(0, Number(priceBasisOverride ?? car.basePrice) || 0);
-      return Math.round(basis * (rate / 100));
+      return getAutoTieredFindersAmount(car.basePrice);
     }
 
     function getSourcingRuleLabel() {
       const cfg = { ...getDefaultSourcingIncentiveConfig(), ...(state.sourcingIncentive || {}) };
       if (!cfg.enabled) return 'OFF';
       if (cfg.mode === 'FLAT') {
-        return `${clampFindersRate(cfg.flatRate).toFixed(1)}% Flat (1.0%–3.0%)`;
+        return `${formatPHP(clampFindersAmount(cfg.flatAmount))} Flat (₱3k–₱10k)`;
       }
-      return `${clampFindersRate(cfg.tier1Rate).toFixed(1)}% – ${clampFindersRate(cfg.tier3Rate).toFixed(1)}% Price-Tiered`;
+      return `${formatPHP(clampFindersAmount(cfg.tier1Amount))} – ${formatPHP(clampFindersAmount(cfg.tier3Amount))} Fixed Tiers`;
     }
 
     function getStageMeta(statusLabel) {
@@ -1040,7 +1033,7 @@
       car.targetMargin = buffer;
       car.basePrice = buyIn + recon + buffer;
       if (car.sourcedByAgentId && car.finderFeeAutoScaled !== false) {
-        car.finderFeePercent = getAutoTieredFindersRate(car.basePrice);
+        car.finderFeeAmount = getAutoTieredFindersAmount(car.basePrice);
       }
       return car.basePrice;
     }
@@ -1327,12 +1320,12 @@
               <i data-lucide="${leadership ? 'wrench' : 'gift'}" class="w-4 h-4 text-amber-600"></i>
             </div>
             <p class="text-2xl font-black text-slate-900 mt-1">
-              ${leadership ? `${prepCarsCount} Unit(s)` : (state.sourcingIncentive?.enabled ? '1.0% – 3.0%' : 'OFF')}
+              ${leadership ? `${prepCarsCount} Unit(s)` : (state.sourcingIncentive?.enabled ? '₱3k – ₱10k' : 'OFF')}
             </p>
             <p class="text-[11px] text-slate-500 font-medium mt-0.5">
               ${leadership
                 ? `<button type="button" onclick="switchTab('prep')" class="text-amber-700 font-bold underline hover:text-amber-900">Manage Recon &amp; Detailing &rarr;</button>`
-                : 'Scaled by car price &bull; Paid on sale'}
+                : 'Fixed peso tiers &bull; Paid on sale'}
             </p>
           </div>
         </div>
@@ -1396,7 +1389,6 @@
             const photos = getCarPhotos(car);
             const score = getChecklistScore(car.checklist);
             const scoutAgent = car.sourcedByAgentId ? getUserRecord(car.sourcedByAgentId) : null;
-            const scoutRate = scoutAgent ? getCarFindersRate(car) : 0;
             const scoutBonus = scoutAgent ? getCarFindersFeeAmount(car) : 0;
             const priorityLockedForMe = hasActivePriorityLock(car, user);
             const bookable = isCarBookable(car);
@@ -1428,7 +1420,7 @@
                     ${scoutAgent ? `
                       <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-indigo-600/95 text-white shadow-2xs flex items-center gap-1">
                         <i data-lucide="radar" class="w-3 h-3"></i>
-                        <span>Sourced: ${escapeHtml(scoutAgent.name.split(' ')[0])} (${scoutRate.toFixed(1)}%)</span>
+                        <span>Sourced: ${escapeHtml(scoutAgent.name.split(' ')[0])} (${formatPHP(scoutBonus)})</span>
                       </span>
                     ` : ''}
                   </div>
@@ -1492,7 +1484,7 @@
                       <div class="text-right">
                         ${scoutAgent && scoutBonus > 0 ? `
                           <span class="inline-flex items-center gap-1 text-[10px] font-extrabold text-indigo-800 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md">
-                            <i data-lucide="gift" class="w-3 h-3"></i> +${formatPHP(scoutBonus)} (${scoutRate.toFixed(1)}%)
+                            <i data-lucide="gift" class="w-3 h-3"></i> +${formatPHP(scoutBonus)} Fixed Fee
                           </span>
                           <span class="block text-[9px] font-bold text-indigo-600 mt-0.5">${escapeHtml(getPriceTierLabel(car.basePrice))}</span>
                         ` : `
@@ -1503,25 +1495,25 @@
                       </div>
                     </div>
 
-                    <!-- Leadership-Only Adjustable 1.0% - 3.0% Finder's Fee Slider -->
+                    <!-- Leadership-Only Adjustable ₱3,000 - ₱10,000 Finder's Fee Slider -->
                     ${leadership && scoutAgent && !isCarSold(car) && state.sourcingIncentive?.enabled ? `
                       <div class="p-2.5 rounded-xl bg-indigo-50/80 border border-indigo-200 space-y-1.5">
                         <div class="flex items-center justify-between text-[11px]">
-                          <span class="font-extrabold text-indigo-950">Finder’s Fee (${escapeHtml(scoutAgent.name.split(' ')[0])})</span>
-                          <span class="font-black text-indigo-700">${scoutRate.toFixed(1)}% = ${formatPHP(scoutBonus)}</span>
+                          <span class="font-extrabold text-indigo-950">Fixed Finder’s Fee (${escapeHtml(scoutAgent.name.split(' ')[0])})</span>
+                          <span class="font-black text-indigo-700">${formatPHP(scoutBonus)}</span>
                         </div>
                         <div class="flex items-center gap-2">
-                          <span class="text-[10px] font-bold text-indigo-600">1.0%</span>
+                          <span class="text-[10px] font-bold text-indigo-600">₱3k</span>
                           <input
                             type="range"
-                            min="1.0"
-                            max="3.0"
-                            step="0.5"
-                            value="${scoutRate.toFixed(1)}"
-                            onchange="updateCarFindersRate('${car.id}', this.value)"
+                            min="3000"
+                            max="10000"
+                            step="500"
+                            value="${scoutBonus}"
+                            onchange="updateCarFindersAmount('${car.id}', this.value)"
                             class="flex-1 accent-indigo-600 cursor-pointer h-1.5"
                           />
-                          <span class="text-[10px] font-bold text-indigo-600">3.0%</span>
+                          <span class="text-[10px] font-bold text-indigo-600">₱10k</span>
                         </div>
                       </div>
                     ` : ''}
@@ -1535,7 +1527,7 @@
                         </div>
                         ${scoutAgent && scoutBonus > 0 ? `
                           <div class="flex items-center justify-between text-indigo-300">
-                            <span>Finder's Fee (${escapeHtml(scoutAgent.name.split(' ')[0])} @ ${scoutRate.toFixed(1)}%):</span>
+                            <span>Fixed Finder's Fee (${escapeHtml(scoutAgent.name.split(' ')[0])}):</span>
                             <span class="font-bold">-${formatPHP(scoutBonus)}</span>
                           </div>
                         ` : ''}
@@ -1660,7 +1652,7 @@
                   ${isCarSold(car) ? (() => {
                     const saleRecord = state.sales.find(s => s.carId === car.id);
                     const closer = getUserRecord(car.soldByAgentId || saleRecord?.agentId);
-                    const sRate = saleRecord?.finderFeePercent ?? scoutRate;
+                    const fixedFee = saleRecord?.sourcingBonus ?? scoutBonus;
                     return `
                       <div class="p-3 rounded-xl bg-slate-900 text-white text-xs space-y-1">
                         <div class="flex items-center justify-between gap-2">
@@ -1674,7 +1666,7 @@
                         </div>
                         ${scoutAgent ? `
                           <p class="text-[11px] text-indigo-300 font-semibold">
-                            Sourced by ${escapeHtml(scoutAgent.name)} ${saleRecord?.sourcingBonus > 0 ? `(+${formatPHP(saleRecord.sourcingBonus)} @ ${Number(sRate).toFixed(1)}% Finder's Fee)` : ''}
+                            Sourced by ${escapeHtml(scoutAgent.name)} ${fixedFee > 0 ? `(+${formatPHP(fixedFee)} Fixed Finder's Fee)` : ''}
                           </p>
                         ` : ''}
                       </div>
@@ -1773,7 +1765,7 @@
               <i data-lucide="shield-alert" class="w-3 h-3"></i> Leadership Bay (Owner / Co-owner / Admin Only)
             </div>
             <h2 class="text-xl font-extrabold text-slate-900">Under Preparation — Intake, Reconditioning &amp; Detailing</h2>
-            <p class="text-xs text-slate-500">Log Buy-In Cost, Recon/PMS expenses, Profit Buffer, and adjust the 1.0%–3.0% Finder’s Fee before releasing to Live Inventory.</p>
+            <p class="text-xs text-slate-500">Log Buy-In Cost, Recon/PMS expenses, Profit Buffer, and adjust the fixed ₱3,000–₱10,000 Finder’s Fee before releasing to Live Inventory.</p>
           </div>
           <button
             type="button"
@@ -1834,7 +1826,6 @@
             const reconTotal = getCarReconTotal(car);
             const totalInvested = getCarTotalInvested(car);
             const scoutAgent = car.sourcedByAgentId ? getUserRecord(car.sourcedByAgentId) : null;
-            const scoutRate = scoutAgent ? getCarFindersRate(car) : 0;
             const scoutBonus = scoutAgent ? getCarFindersFeeAmount(car) : 0;
 
             const estProfitPatong = car.basePrice - totalInvested - scoutBonus;
@@ -1854,7 +1845,7 @@
                     </span>
                     ${scoutAgent ? `
                       <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-indigo-600 text-white">
-                        Sourced: ${escapeHtml(scoutAgent.name)} (${scoutRate.toFixed(1)}%)
+                        Sourced: ${escapeHtml(scoutAgent.name)} (${formatPHP(scoutBonus)})
                       </span>
                     ` : ''}
                   </div>
@@ -1913,12 +1904,12 @@
                       <div class="flex items-center justify-between text-xs">
                         <div>
                           <span class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700 block">
-                            Sourced Car Finder’s Fee (${escapeHtml(getPriceTierLabel(car.basePrice))})
+                            Fixed Sourced Car Finder’s Fee (${escapeHtml(getPriceTierLabel(car.basePrice))})
                           </span>
                           <span class="font-bold text-indigo-950">${escapeHtml(scoutAgent.name)}</span>
                         </div>
                         <div class="text-right">
-                          <span class="text-sm font-black text-indigo-700">${scoutRate.toFixed(1)}% = ${formatPHP(scoutBonus)}</span>
+                          <span class="text-sm font-black text-indigo-700">${formatPHP(scoutBonus)}</span>
                           ${car.finderFeeAutoScaled === false ? `
                             <button type="button" onclick="resetCarFindersAutoScale('${car.id}')" class="block ml-auto text-[10px] font-bold text-indigo-600 underline">
                               Reset Auto-Tier
@@ -1927,17 +1918,17 @@
                         </div>
                       </div>
                       <div class="flex items-center gap-2.5">
-                        <span class="text-[10px] font-extrabold text-indigo-700">1.0%</span>
+                        <span class="text-[10px] font-extrabold text-indigo-700">₱3,000</span>
                         <input
                           type="range"
-                          min="1.0"
-                          max="3.0"
-                          step="0.5"
-                          value="${scoutRate.toFixed(1)}"
-                          onchange="updateCarFindersRate('${car.id}', this.value)"
+                          min="3000"
+                          max="10000"
+                          step="500"
+                          value="${scoutBonus}"
+                          onchange="updateCarFindersAmount('${car.id}', this.value)"
                           class="flex-1 accent-indigo-600 cursor-pointer h-1.5"
                         />
-                        <span class="text-[10px] font-extrabold text-indigo-700">3.0%</span>
+                        <span class="text-[10px] font-extrabold text-indigo-700">₱10,000</span>
                       </div>
                     </div>
                   ` : ''}
@@ -1952,7 +1943,7 @@
                       </span>
                       ${scoutAgent && scoutBonus > 0 ? `
                         <span class="block text-[10px] font-bold text-indigo-700">
-                          Includes -${formatPHP(scoutBonus)} Finder's Fee (${scoutRate.toFixed(1)}% to ${escapeHtml(scoutAgent.name)})
+                          Includes -${formatPHP(scoutBonus)} Fixed Finder's Fee (${escapeHtml(scoutAgent.name)})
                         </span>
                       ` : ''}
                     </div>
@@ -2025,7 +2016,6 @@
       const rollingDays = [getDateOffsetStr(0), getDateOffsetStr(1), getDateOffsetStr(2)];
       const priorityLockedForMe = selectedCar ? hasActivePriorityLock(selectedCar, user) : false;
       const scoutAgent = selectedCar?.sourcedByAgentId ? getUserRecord(selectedCar.sourcedByAgentId) : null;
-      const scoutRate = scoutAgent ? getCarFindersRate(selectedCar) : 0;
       const scoutBonus = scoutAgent ? getCarFindersFeeAmount(selectedCar) : 0;
 
       return `
@@ -2077,7 +2067,7 @@
                     <i data-lucide="shield-check" class="w-3.5 h-3.5 text-indigo-600"></i>
                     <span>48h Scout Attribution Active</span>
                   </p>
-                  <p class="mt-0.5">Sourced by <strong>${escapeHtml(scoutAgent.name)}</strong> (${scoutRate.toFixed(1)}% = ${formatPHP(scoutBonus)})</p>
+                  <p class="mt-0.5">Sourced by <strong>${escapeHtml(scoutAgent.name)}</strong> (${formatPHP(scoutBonus)} Fixed Fee)</p>
                 </div>
               ` : ''}
 
@@ -2172,7 +2162,7 @@
     }
 
     // =========================================================================
-    // 8. VIEW 4: CAR SOURCING & ADJUSTABLE 1.0% - 3.0% FINDER'S FEE
+    // 8. VIEW 4: CAR SOURCING & FIXED ₱3,000 - ₱10,000 FINDER'S FEE
     // =========================================================================
     function renderSourcingView() {
       const user = getCurrentUser();
@@ -2182,9 +2172,9 @@
       return `
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div>
-            <h2 class="text-xl font-extrabold text-slate-900">Off-Market Car Sourcing &amp; Finder’s Fee Attribution (1.0% – 3.0%)</h2>
+            <h2 class="text-xl font-extrabold text-slate-900">Off-Market Car Sourcing &amp; Fixed Finder’s Fee (₱3,000 – ₱10,000)</h2>
             <p class="text-xs text-slate-500 mt-0.5">
-              Submit direct seller leads with an adjustable <strong>1.0% – 3.0% Finder’s Fee</strong> (0.5% steps). Acquiring a lead moves it into <strong>Under Prep</strong> and credits the scouting agent in <strong>Sales &amp; Payouts</strong>.
+              Submit direct seller leads with a predictable, fixed <strong>₱3,000 – ₱10,000 Finder’s Fee</strong> (₱500 steps). Acquiring a lead moves it into <strong>Under Prep</strong> and credits the scouting agent in <strong>Sales &amp; Payouts</strong>.
             </p>
           </div>
           <button
@@ -2207,15 +2197,15 @@
                 Active Car Sourcing Finder’s Fee Rule: <span class="text-indigo-700">${escapeHtml(getSourcingRuleLabel())}</span>
               </p>
               <p class="text-[11px] text-slate-600">
-                Tier 1 (&lt;₱650k): <strong>${Number(state.sourcingIncentive.tier1Rate).toFixed(1)}%</strong> &bull;
-                Tier 2 (₱650k–₱1.19M): <strong>${Number(state.sourcingIncentive.tier2Rate).toFixed(1)}%</strong> &bull;
-                Tier 3 (₱1.2M+): <strong>${Number(state.sourcingIncentive.tier3Rate).toFixed(1)}%</strong>
+                Tier 1 (&lt;₱650k): <strong>${formatPHP(state.sourcingIncentive.tier1Amount)}</strong> &bull;
+                Tier 2 (₱650k–₱1.19M): <strong>${formatPHP(state.sourcingIncentive.tier2Amount)}</strong> &bull;
+                Tier 3 (₱1.2M+): <strong>${formatPHP(state.sourcingIncentive.tier3Amount)}</strong>
               </p>
             </div>
           </div>
           ${isExecutiveOwner(user) ? `
             <button type="button" onclick="switchTab('settings')" class="px-3 py-1.5 rounded-xl bg-white border border-indigo-200 text-indigo-800 text-xs font-bold hover:bg-indigo-50">
-              Configure Tiers (1.0%–3.0%)
+              Configure Tiers (₱3k–₱10k)
             </button>
           ` : ''}
         </div>
@@ -2225,10 +2215,9 @@
             const scout = getUserRecord(lead.agentId);
             const canSeeContact = leadership || lead.agentId === user.id;
             const estFloor = Number(lead.targetFloorPrice) || ((Number(lead.askingPrice) || 0) + (Number(lead.estRecon) || 0) + 45000);
-            const leadRate = incentiveEnabled
-              ? clampFindersRate(lead.finderFeePercent ?? getAutoTieredFindersRate(estFloor))
+            const estIncentive = incentiveEnabled
+              ? clampFindersAmount(lead.finderFeeAmount ?? getAutoTieredFindersAmount(estFloor))
               : 0;
-            const estIncentive = incentiveEnabled ? Math.round(estFloor * (leadRate / 100)) : 0;
             const isAcquired = lead.status === 'ACQUIRED';
 
             const badgeClass = {
@@ -2247,7 +2236,7 @@
                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${badgeClass}">${lead.status}</span>
                         ${estIncentive > 0 ? `
                           <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-100 text-indigo-900 border border-indigo-200">
-                            Finder’s Fee: ${leadRate.toFixed(1)}% (+${formatPHP(estIncentive)})
+                            Fixed Finder’s Fee: +${formatPHP(estIncentive)}
                           </span>
                         ` : ''}
                       </div>
@@ -2274,21 +2263,21 @@
                   ${leadership && !isAcquired && incentiveEnabled ? `
                     <div class="p-2.5 rounded-xl bg-indigo-50/80 border border-indigo-200 space-y-1">
                       <div class="flex items-center justify-between text-[11px]">
-                        <span class="font-extrabold text-indigo-950">Adjust Finder’s Rate (${escapeHtml(getPriceTierLabel(estFloor))})</span>
-                        <span class="font-black text-indigo-700">${leadRate.toFixed(1)}% = ${formatPHP(estIncentive)}</span>
+                        <span class="font-extrabold text-indigo-950">Adjust Fixed Finder’s Fee (${escapeHtml(getPriceTierLabel(estFloor))})</span>
+                        <span class="font-black text-indigo-700">${formatPHP(estIncentive)}</span>
                       </div>
                       <div class="flex items-center gap-2">
-                        <span class="text-[10px] font-bold text-indigo-600">1.0%</span>
+                        <span class="text-[10px] font-bold text-indigo-600">₱3,000</span>
                         <input
                           type="range"
-                          min="1.0"
-                          max="3.0"
-                          step="0.5"
-                          value="${leadRate.toFixed(1)}"
-                          onchange="updateLeadFindersRate('${lead.id}', this.value)"
+                          min="3000"
+                          max="10000"
+                          step="500"
+                          value="${estIncentive}"
+                          onchange="updateLeadFindersAmount('${lead.id}', this.value)"
                           class="flex-1 accent-indigo-600 cursor-pointer h-1.5"
                         />
-                        <span class="text-[10px] font-bold text-indigo-600">3.0%</span>
+                        <span class="text-[10px] font-bold text-indigo-600">₱10,000</span>
                       </div>
                     </div>
                   ` : ''}
@@ -2322,12 +2311,12 @@
                       onclick="acquireLeadIntoInventory('${lead.id}')"
                       class="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs transition"
                     >
-                      Acquire to Under Prep (${leadRate.toFixed(1)}%) &rarr;
+                      Acquire to Under Prep (${formatPHP(estIncentive)}) &rarr;
                     </button>
                   </div>
                 ` : isAcquired ? `
                   <div class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-center text-xs font-bold text-emerald-800">
-                    Acquired to Under Prep &bull; ${leadRate.toFixed(1)}% Finder’s attribution locked to ${escapeHtml(scout.name)}
+                    Acquired to Under Prep &bull; ${formatPHP(estIncentive)} Fixed Finder’s attribution locked to ${escapeHtml(scout.name)}
                   </div>
                 ` : ''}
               </div>
@@ -2413,10 +2402,10 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
           <div>
             <h2 class="text-xl font-extrabold text-slate-900">
-              ${leadership ? 'Sales Ledger, Agent Payouts & Finder’s Fees (1.0% – 3.0%)' : 'My Closing Commissions & Sourced Car Finder’s Fees'}
+              ${leadership ? 'Sales Ledger, Agent Payouts & Fixed Finder’s Fees (₱3k – ₱10k)' : 'My Closing Commissions & Sourced Car Finder’s Fees'}
             </h2>
             <p class="text-xs text-slate-500 mt-0.5">
-              Itemizes Closing Deal Payouts (Patong or ${Number(state.commissionRate).toFixed(1)}% Comm) alongside Sourced Car Finder’s Incentives (1.0%–3.0%).
+              Itemizes Closing Deal Payouts (Patong or ${Number(state.commissionRate).toFixed(1)}% Comm) alongside Fixed Sourced Car Finder’s Incentives (₱3,000–₱10,000).
             </p>
           </div>
 
@@ -2496,8 +2485,8 @@
         <!-- Agent Earnings Summary Breakdown -->
         <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs mb-6">
           <div class="mb-4">
-            <h3 class="text-sm font-extrabold text-slate-900">Partner Agent Payout Summary (Closing + Sourced Car Finder’s Fees)</h3>
-            <p class="text-xs text-slate-500">Itemizes each agent's Closing Deal Payout, Sourced Car Finder’s Incentives (with car model, price basis &amp; 1.0%–3.0% rate), and Total Payable Payout.</p>
+            <h3 class="text-sm font-extrabold text-slate-900">Partner Agent Payout Summary (Closing + Fixed Sourced Car Finder’s Fees)</h3>
+            <p class="text-xs text-slate-500">Itemizes each agent's Closing Deal Payout, Fixed Sourced Car Finder’s Incentives (₱3,000–₱10,000 per sourced unit sold), and Total Payable Payout.</p>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2541,20 +2530,20 @@
                 ${ag.sourcedDeals.length > 0 ? `
                   <div class="bg-white rounded-xl border border-indigo-100 p-2.5 space-y-1.5">
                     <span class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-800 block">
-                      Sourced Car Finder’s Fee Details:
+                      Fixed Sourced Car Finder’s Fee Details:
                     </span>
                     ${ag.sourcedDeals.map(sd => {
                       const basis = Number(sd.sourcingPriceBasis) || Number(sd.basePriceSnapshot) || 0;
-                      const rate = Number(sd.finderFeePercent) || (basis > 0 ? ((Number(sd.sourcingBonus) / basis) * 100) : 2.0);
+                      const tierLbl = sd.sourcingTierLabel || getPriceTierLabel(basis);
                       return `
                         <div class="flex flex-wrap items-center justify-between gap-1.5 text-[11px] bg-indigo-50/60 px-2.5 py-1.5 rounded-lg border border-indigo-100">
                           <div class="min-w-0">
                             <span class="font-bold text-slate-900 truncate block">${escapeHtml(sd.carTitle)}</span>
-                            <span class="text-[10px] text-slate-500">Price Basis: ${formatPHP(basis)}</span>
+                            <span class="text-[10px] text-slate-500">Floor: ${formatPHP(basis)} &bull; ${escapeHtml(tierLbl)}</span>
                           </div>
                           <div class="flex items-center gap-1.5 shrink-0">
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-600 text-white">
-                              ${rate.toFixed(1)}%
+                              Fixed Fee
                             </span>
                             <span class="font-black text-indigo-900">+${formatPHP(sd.sourcingBonus)}</span>
                           </div>
@@ -2592,7 +2581,7 @@
           <div class="px-5 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <h3 class="text-sm font-extrabold text-slate-900">Closed Sales &amp; Payout Ledger</h3>
-              <p class="text-[11px] text-slate-500">Dedicated Sourced Car Finder’s Fee column displays scouting agent, price-based rate (1.0%–3.0%), and peso payout.</p>
+              <p class="text-[11px] text-slate-500">Dedicated Fixed Sourced Car Finder’s Fee column displays scouting agent, price tier, and fixed peso payout (₱3,000–₱10,000).</p>
             </div>
             <div class="flex items-center gap-1.5">
               ${[
@@ -2623,7 +2612,7 @@
                     <th class="py-3 px-4">Vehicle &amp; Payment Proof</th>
                     <th class="py-3 px-4">Buyer &amp; Sale Price</th>
                     <th class="py-3 px-4">Closing Agent Payout</th>
-                    <th class="py-3 px-4 bg-indigo-50/70 text-indigo-900">Sourced Car Finder’s Fee (1.0%–3.0%)</th>
+                    <th class="py-3 px-4 bg-indigo-50/70 text-indigo-900">Fixed Sourced Car Finder’s Fee (₱3k–₱10k)</th>
                     ${leadership ? `<th class="py-3 px-4 text-right">Verified Net Profit</th>` : ''}
                   </tr>
                 </thead>
@@ -2633,7 +2622,7 @@
                     const scout = sale.sourcedByAgentId ? getUserRecord(sale.sourcedByAgentId) : null;
                     const finderBonus = Number(sale.sourcingBonus) || 0;
                     const priceBasis = Number(sale.sourcingPriceBasis) || Number(sale.basePriceSnapshot) || 0;
-                    const finderRate = Number(sale.finderFeePercent) || (priceBasis > 0 ? ((finderBonus / priceBasis) * 100) : 0);
+                    const tierLabel = sale.sourcingTierLabel || getPriceTierLabel(priceBasis);
                     const closingPayout = Number(sale.agentPayout) || 0;
                     const hasFinderIncentive = Boolean(scout && finderBonus > 0);
                     const isSplitPayout = hasFinderIncentive && scout.id !== closer.id;
@@ -2722,7 +2711,7 @@
                             </div>
                             <div class="flex flex-wrap items-center gap-1.5">
                               <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-600 text-white">
-                                ${finderRate.toFixed(1)}% of ${formatPHP(priceBasis)}
+                                Fixed Fee &bull; ${escapeHtml(tierLabel)}
                               </span>
                               <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase ${
                                 isSplitPayout ? 'bg-amber-200 text-amber-950' : 'bg-emerald-200 text-emerald-950'
@@ -2797,8 +2786,8 @@
       return `
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
           <div>
-            <h2 class="text-xl font-extrabold text-slate-900">Dealership Settings &amp; Finder’s Fee Configuration</h2>
-            <p class="text-xs text-slate-500 mt-0.5">White-label dealership branding, default closing commission rate, 1.0%–3.0% Finder’s Fee tiers, team roles, and demo reset.</p>
+            <h2 class="text-xl font-extrabold text-slate-900">Dealership Settings &amp; Fixed Finder’s Fee Configuration</h2>
+            <p class="text-xs text-slate-500 mt-0.5">White-label dealership branding, default closing commission rate, fixed ₱3,000–₱10,000 Finder’s Fee tiers, team roles, and demo reset.</p>
           </div>
           <button
             type="button"
@@ -2809,39 +2798,38 @@
           </button>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- White-Label Branding & Default Commission -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <!-- 1. Dealership Branding & Default Closing Commission -->
           <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
             <h3 class="text-sm font-extrabold text-slate-900 mb-1">1. Dealership Branding &amp; Closing Commission</h3>
             <p class="text-xs text-slate-500 mb-4">Customize dealership name, location tagline, accent color, and default closing commission percentage.</p>
 
             <form onsubmit="submitBrandingSettings(event)" class="space-y-3.5">
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Dealership Name</label>
-                  <input type="text" name="dealershipName" required value="${escapeHtml(branding.dealershipName)}" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm font-bold" />
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Location Tagline</label>
-                  <input type="text" name="tagline" required value="${escapeHtml(branding.tagline)}" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm" />
-                </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Dealership Name</label>
+                <input type="text" name="dealershipName" required value="${escapeHtml(branding.dealershipName)}" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold" />
               </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Location / Tagline</label>
+                <input type="text" name="tagline" required value="${escapeHtml(branding.tagline)}" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-semibold" />
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Primary Accent Color</label>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Brand Accent Color</label>
                   <div class="flex items-center gap-2">
-                    <input type="color" id="settings-color-picker" value="${escapeHtml(branding.accentColor)}" oninput="document.getElementById('settings-color-hex').value = this.value" class="w-10 h-9 rounded cursor-pointer border-0" />
-                    <input type="text" id="settings-color-hex" name="accentColor" value="${escapeHtml(branding.accentColor)}" oninput="document.getElementById('settings-color-picker').value = normalizeHexColor(this.value)" class="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-xs font-mono font-bold" />
+                    <input type="color" name="accentColor" value="${escapeHtml(branding.accentColor)}" class="w-10 h-9 rounded-lg border border-slate-200 cursor-pointer" />
+                    <span class="text-xs font-mono font-bold text-slate-600">${escapeHtml(branding.accentColor)}</span>
                   </div>
                 </div>
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Default Closing Commission (%)</label>
-                  <input type="number" name="commissionRate" step="0.5" min="1.0" max="5.0" value="${Number(state.commissionRate).toFixed(1)}" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm font-bold" />
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Default Closing Comm (%)</label>
+                  <input type="number" name="commissionRate" min="1.0" max="5.0" step="0.5" value="${Number(state.commissionRate).toFixed(1)}" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-black" />
                 </div>
               </div>
 
-              <div class="flex justify-end pt-2">
+              <div class="flex justify-end pt-1">
                 <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold">
                   Save Branding &amp; Commission
                 </button>
@@ -2849,54 +2837,54 @@
             </form>
           </div>
 
-          <!-- Adjustable 1.0% - 3.0% Finder's Fee Tiers -->
+          <!-- 2. Fixed ₱3,000 - ₱10,000 Finder's Fee Tiers -->
           <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
-            <h3 class="text-sm font-extrabold text-slate-900 mb-1">2. Sourced Car Finder’s Fee Tiers (1.0% – 3.0%)</h3>
-            <p class="text-xs text-slate-500 mb-4">Configure price-scaled Finder’s Fee tiers (0.5% steps between 1.0% and 3.0%) credited to scouting agents upon sale.</p>
+            <h3 class="text-sm font-extrabold text-slate-900 mb-1">2. Fixed Sourced Car Finder’s Fee Tiers (₱3,000 – ₱10,000)</h3>
+            <p class="text-xs text-slate-500 mb-4">Configure fixed peso Finder’s Fee tiers (₱500 steps between ₱3,000 and ₱10,000) credited to scouting agents upon sale.</p>
 
             <form onsubmit="submitIncentiveRulesSettings(event)" class="space-y-3.5">
               <label class="flex items-center justify-between p-3 rounded-xl bg-indigo-50 border border-indigo-200 cursor-pointer">
-                <span class="text-xs font-extrabold text-indigo-950">Enable Sourced Car Finder’s Fee Payouts</span>
+                <span class="text-xs font-extrabold text-indigo-950">Enable Fixed Sourced Car Finder’s Fee Payouts</span>
                 <input type="checkbox" name="enabled" ${incentive.enabled ? 'checked' : ''} class="w-4 h-4 accent-indigo-600" />
               </label>
 
               <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1">Calculation Mode</label>
                 <select name="mode" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold bg-white">
-                  <option value="TIERED" ${incentive.mode === 'TIERED' ? 'selected' : ''}>Price-Tiered Scale (1.0% – 3.0% by Car Price)</option>
-                  <option value="FLAT" ${incentive.mode === 'FLAT' ? 'selected' : ''}>Dealership Flat Rate (1.0% – 3.0%)</option>
+                  <option value="TIERED" ${incentive.mode === 'TIERED' ? 'selected' : ''}>Fixed Price-Tiered Scale (₱3,000 – ₱10,000 by Car Price)</option>
+                  <option value="FLAT" ${incentive.mode === 'FLAT' ? 'selected' : ''}>Single Fixed Flat Fee (₱3,000 – ₱10,000)</option>
                 </select>
               </div>
 
               <div class="grid grid-cols-3 gap-2.5">
                 <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                   <span class="text-[10px] font-bold text-slate-500 block">Tier 1 (&lt;₱650k)</span>
-                  <input type="number" name="tier1Rate" min="1.0" max="3.0" step="0.5" value="${Number(incentive.tier1Rate).toFixed(1)}" class="mt-1 w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-black text-indigo-700" />
+                  <input type="number" name="tier1Amount" min="3000" max="10000" step="500" value="${clampFindersAmount(incentive.tier1Amount)}" class="mt-1 w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-black text-indigo-700" />
                 </div>
                 <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                   <span class="text-[10px] font-bold text-slate-500 block">Tier 2 (₱650k–1.19M)</span>
-                  <input type="number" name="tier2Rate" min="1.0" max="3.0" step="0.5" value="${Number(incentive.tier2Rate).toFixed(1)}" class="mt-1 w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-black text-indigo-700" />
+                  <input type="number" name="tier2Amount" min="3000" max="10000" step="500" value="${clampFindersAmount(incentive.tier2Amount)}" class="mt-1 w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-black text-indigo-700" />
                 </div>
                 <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                   <span class="text-[10px] font-bold text-slate-500 block">Tier 3 (₱1.2M+)</span>
-                  <input type="number" name="tier3Rate" min="1.0" max="3.0" step="0.5" value="${Number(incentive.tier3Rate).toFixed(1)}" class="mt-1 w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-black text-indigo-700" />
+                  <input type="number" name="tier3Amount" min="3000" max="10000" step="500" value="${clampFindersAmount(incentive.tier3Amount)}" class="mt-1 w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-black text-indigo-700" />
                 </div>
               </div>
 
               <div class="flex items-center justify-between gap-2">
-                <label class="text-xs font-bold text-slate-700">Flat Mode Rate (1.0% – 3.0%):</label>
-                <input type="number" name="flatRate" min="1.0" max="3.0" step="0.5" value="${Number(incentive.flatRate).toFixed(1)}" class="w-24 px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs font-black" />
+                <label class="text-xs font-bold text-slate-700">Single Flat Fixed Fee (₱3,000 – ₱10,000):</label>
+                <input type="number" name="flatAmount" min="3000" max="10000" step="500" value="${clampFindersAmount(incentive.flatAmount)}" class="w-28 px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs font-black" />
               </div>
 
               <div class="flex justify-end pt-1">
                 <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold">
-                  Save Finder’s Fee Rules
+                  Save Fixed Finder’s Fee Rules
                 </button>
               </div>
             </form>
           </div>
 
-          <!-- Team Roster & Role Management -->
+          <!-- 3. Team Roster & Role Management -->
           <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
             <h3 class="text-sm font-extrabold text-slate-900 mb-1">3. Magief Cars Team Roster &amp; 3-Tier Role Access</h3>
             <p class="text-xs text-slate-500 mb-4">Manage permissions across Owner, Co-owner, Admin, and Partner Agents.</p>
@@ -3090,7 +3078,7 @@
         const defaultCloserId = car.reservation?.agentId || (leadership ? activeAgents[0]?.id : currentUser.id);
         const defaultBuyer = car.reservation?.buyerName || '';
         const scout = car.sourcedByAgentId ? getUserRecord(car.sourcedByAgentId) : null;
-        const initialScoutRate = scout ? getCarFindersRate(car) : 0;
+        const initialScoutFee = scout ? getCarFindersFeeAmount(car) : 0;
 
         root.innerHTML = `
           <div class="fixed inset-0 z-50 bg-slate-950/65 backdrop-blur-xs flex items-center justify-center p-4">
@@ -3146,28 +3134,28 @@
                 ${scout && state.sourcingIncentive?.enabled ? `
                   <div class="p-3 rounded-xl bg-indigo-50 border border-indigo-200 space-y-1.5">
                     <div class="flex items-center justify-between text-xs">
-                      <span class="font-extrabold text-indigo-950">Sourced Car Finder’s Fee (${escapeHtml(scout.name)})</span>
+                      <span class="font-extrabold text-indigo-950">Fixed Sourced Car Finder’s Fee (${escapeHtml(scout.name)})</span>
                       <span id="sold-modal-finder-badge" class="font-black text-indigo-700">
-                        ${initialScoutRate.toFixed(1)}% = ${formatPHP(Math.round(car.basePrice * (initialScoutRate / 100)))}
+                        ${formatPHP(initialScoutFee)}
                       </span>
                     </div>
                     ${leadership ? `
                       <div class="flex items-center gap-2.5">
-                        <span class="text-[10px] font-extrabold text-indigo-700">1.0%</span>
+                        <span class="text-[10px] font-extrabold text-indigo-700">₱3,000</span>
                         <input
                           type="range"
-                          name="finderFeePercent"
-                          min="1.0"
-                          max="3.0"
-                          step="0.5"
-                          value="${initialScoutRate.toFixed(1)}"
+                          name="finderFeeAmount"
+                          min="3000"
+                          max="10000"
+                          step="500"
+                          value="${initialScoutFee}"
                           oninput="updateSoldModalPayoutPreview('${car.id}')"
                           class="flex-1 accent-indigo-600 cursor-pointer h-1.5"
                         />
-                        <span class="text-[10px] font-extrabold text-indigo-700">3.0%</span>
+                        <span class="text-[10px] font-extrabold text-indigo-700">₱10,000</span>
                       </div>
                     ` : `
-                      <input type="hidden" name="finderFeePercent" value="${initialScoutRate.toFixed(1)}" />
+                      <input type="hidden" name="finderFeeAmount" value="${initialScoutFee}" />
                     `}
                   </div>
                 ` : ''}
@@ -3369,7 +3357,7 @@
         const currentUser = getCurrentUser();
         const agents = Object.values(state.agents).filter(u => u.tier === 'AGENT');
         const defaultFloor = 1010000;
-        const defaultRate = getAutoTieredFindersRate(defaultFloor) || 2.0;
+        const defaultFee = getAutoTieredFindersAmount(defaultFloor) || 6000;
 
         root.innerHTML = `
           <div class="fixed inset-0 z-50 bg-slate-950/65 backdrop-blur-xs flex items-center justify-center p-4">
@@ -3380,25 +3368,52 @@
               </div>
               <form id="submit-lead-form" onsubmit="submitNewLead(event)" class="space-y-3.5">
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Vehicle Title (Year, Make &amp; Model)</label>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Scouting Partner Agent</label>
+                  <select name="agentId" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold bg-white">
+                    ${agents.map(a => `<option value="${a.id}" ${a.id === currentUser.id ? 'selected' : ''}>${escapeHtml(a.name)}</option>`).join('')}
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Year, Make &amp; Model</label>
                   <input type="text" name="makeModel" required placeholder="e.g., 2021 Mazda CX-5 AWD Sport" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm" />
                 </div>
-                <div class="grid grid-cols-3 gap-2.5">
+
+                <div class="grid grid-cols-2 gap-3">
                   <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Plate No.</label>
-                    <input type="text" name="plateNo" required placeholder="NGH-5510" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold" />
+                    <input type="text" name="plateNo" required placeholder="NGH-5510" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold uppercase" />
                   </div>
                   <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Mileage</label>
                     <input type="text" name="mileage" required placeholder="31,000 km" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs" />
                   </div>
-                  <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Scouting Agent</label>
-                    <select name="agentId" class="w-full px-2.5 py-2 border border-slate-200 rounded-xl text-xs font-bold">
-                      ${agents.map(a => `<option value="${a.id}" ${a.id === currentUser.id ? 'selected' : ''}>${escapeHtml(a.name)}</option>`).join('')}
-                    </select>
+                </div>
+
+                <!-- Adjustable Fixed ₱3,000 - ₱10,000 Finder's Fee Slider (₱500 steps) -->
+                <div class="p-3 rounded-xl bg-indigo-50 border border-indigo-200 space-y-1.5">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="font-extrabold text-indigo-950">Fixed Finder’s Fee (₱3,000 – ₱10,000 in ₱500 steps)</span>
+                    <span id="submit-lead-fee-preview" class="font-black text-indigo-700">
+                      ${formatPHP(defaultFee)} (${getPriceTierLabel(defaultFloor)})
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-2.5">
+                    <span class="text-[10px] font-extrabold text-indigo-700">₱3,000</span>
+                    <input
+                      type="range"
+                      name="finderFeeAmount"
+                      min="3000"
+                      max="10000"
+                      step="500"
+                      value="${defaultFee}"
+                      oninput="updateSubmitLeadFeePreview(false)"
+                      class="flex-1 accent-indigo-600 cursor-pointer h-1.5"
+                    />
+                    <span class="text-[10px] font-extrabold text-indigo-700">₱10,000</span>
                   </div>
                 </div>
+
                 <div class="grid grid-cols-3 gap-2.5">
                   <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Seller Ask Price (₱)</label>
@@ -3423,45 +3438,27 @@
                   </div>
                 </div>
 
-                <!-- Adjustable 1.0% - 3.0% Finder's Fee Slider (0.5% steps) -->
-                <div class="p-3 rounded-xl bg-indigo-50 border border-indigo-200 space-y-1.5">
-                  <div class="flex items-center justify-between text-xs">
-                    <span class="font-extrabold text-indigo-950">Finder’s Fee Rate (1.0% – 3.0% in 0.5% steps)</span>
-                    <span id="submit-lead-fee-preview" class="font-black text-indigo-700">
-                      ${defaultRate.toFixed(1)}% = ${formatPHP(Math.round(defaultFloor * (defaultRate / 100)))}
-                    </span>
-                  </div>
-                  <div class="flex items-center gap-2.5">
-                    <span class="text-[10px] font-extrabold text-indigo-700">1.0%</span>
-                    <input
-                      type="range"
-                      name="finderFeePercent"
-                      min="1.0"
-                      max="3.0"
-                      step="0.5"
-                      value="${defaultRate.toFixed(1)}"
-                      oninput="updateSubmitLeadFeePreview(false)"
-                      class="flex-1 accent-indigo-600 cursor-pointer h-1.5"
-                    />
-                    <span class="text-[10px] font-extrabold text-indigo-700">3.0%</span>
-                  </div>
-                </div>
-
                 <div class="grid grid-cols-2 gap-3">
                   <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Seller Name</label>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Direct Seller Name</label>
                     <input type="text" name="sellerName" required placeholder="e.g., Roberto Ramos" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs" />
                   </div>
                   <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Seller Contact</label>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Seller Mobile</label>
                     <input type="text" name="sellerPhone" required placeholder="0917-XXX-XXXX" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs" />
                   </div>
                 </div>
+
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Location &amp; Condition Notes</label>
-                  <input type="text" name="location" required placeholder="Trece Martires / Cavite" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs mb-2" />
-                  <textarea name="notes" rows="2" required placeholder="1st owner, OR/CR on hand, clean LTO..." class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs"></textarea>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Inspection Location</label>
+                  <input type="text" name="location" required placeholder="e.g., Trece Martires / Dasmariñas, Cavite" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs" />
                 </div>
+
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Condition &amp; Docs Notes</label>
+                  <textarea name="notes" rows="2" required placeholder="OR/CR on hand, 1st owner, no flood history..." class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs"></textarea>
+                </div>
+
                 <div class="flex justify-end gap-2 pt-2">
                   <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">Cancel</button>
                   <button type="submit" class="px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white">Submit Lead</button>
@@ -3623,18 +3620,18 @@
     function openEditCarImagesModal(carId) { openModal('edit-car-images', { carId }); }
     function openReceiptLightboxModal(targetType, targetId) { openModal('receipt-lightbox', { targetType, targetId }); }
 
-    function updateCarFindersRate(carId, newRate) {
+    function updateCarFindersAmount(carId, newAmount) {
       if (!isLeadership(getCurrentUser())) return;
       const car = state.cars.find(c => c.id === carId);
       if (!car) return;
-      const clamped = clampFindersRate(newRate);
-      car.finderFeePercent = clamped;
+      const clamped = clampFindersAmount(newAmount);
+      car.finderFeeAmount = clamped;
       car.finderFeeAutoScaled = false;
       saveState();
       renderApp();
       emitLiveEvent(
-        'Finder’s Fee Adjusted',
-        `${car.year} ${car.make} ${car.model} set to ${clamped.toFixed(1)}% (${formatPHP(getCarFindersFeeAmount(car))}).`,
+        'Fixed Finder’s Fee Adjusted',
+        `${car.year} ${car.make} ${car.model} set to ${formatPHP(clamped)}.`,
         'indigo'
       );
     }
@@ -3644,24 +3641,23 @@
       const car = state.cars.find(c => c.id === carId);
       if (!car) return;
       car.finderFeeAutoScaled = true;
-      car.finderFeePercent = getAutoTieredFindersRate(car.basePrice);
+      car.finderFeeAmount = getAutoTieredFindersAmount(car.basePrice);
       saveState();
       renderApp();
-      emitLiveEvent('Auto-Tier Restored', `${car.year} ${car.make} ${car.model} synced to ${car.finderFeePercent.toFixed(1)}%.`, 'indigo');
+      emitLiveEvent('Auto-Tier Restored', `${car.year} ${car.make} ${car.model} synced to ${formatPHP(car.finderFeeAmount)}.`, 'indigo');
     }
 
-    function updateLeadFindersRate(leadId, newRate) {
+    function updateLeadFindersAmount(leadId, newAmount) {
       if (!isLeadership(getCurrentUser())) return;
       const lead = state.leads.find(l => l.id === leadId);
       if (!lead) return;
-      const clamped = clampFindersRate(newRate);
-      lead.finderFeePercent = clamped;
-      const estFloor = Number(lead.targetFloorPrice) || ((Number(lead.askingPrice) || 0) + (Number(lead.estRecon) || 0) + 45000);
+      const clamped = clampFindersAmount(newAmount);
+      lead.finderFeeAmount = clamped;
       saveState();
       renderApp();
       emitLiveEvent(
-        'Lead Finder’s Rate Adjusted',
-        `${lead.makeModel} set to ${clamped.toFixed(1)}% (${formatPHP(Math.round(estFloor * (clamped / 100)))}).`,
+        'Lead Finder’s Fee Adjusted',
+        `${lead.makeModel} set to ${formatPHP(clamped)} fixed fee.`,
         'indigo'
       );
     }
@@ -3671,12 +3667,11 @@
       const labelEl = document.getElementById('submit-lead-fee-preview');
       if (!form || !labelEl) return;
       const floor = Math.max(50000, Number(form.targetFloorPrice?.value) || 1010000);
-      if (autoTierFromPrice && form.finderFeePercent) {
-        form.finderFeePercent.value = (getAutoTieredFindersRate(floor) || 2.0).toFixed(1);
+      if (autoTierFromPrice && form.finderFeeAmount) {
+        form.finderFeeAmount.value = getAutoTieredFindersAmount(floor) || 6000;
       }
-      const rate = clampFindersRate(form.finderFeePercent?.value || 2.0);
-      const fee = Math.round(floor * (rate / 100));
-      labelEl.textContent = `${rate.toFixed(1)}% = ${formatPHP(fee)}`;
+      const fee = clampFindersAmount(form.finderFeeAmount?.value || 6000);
+      labelEl.textContent = `${formatPHP(fee)} (${getPriceTierLabel(floor)})`;
     }
 
     function handleReceiptFileUpload(fileInput, hiddenInputId, previewBoxId) {
@@ -3751,14 +3746,13 @@
         : Math.round(finalPrice * (Number(state.commissionRate) / 100));
 
       const scout = car.sourcedByAgentId ? getUserRecord(car.sourcedByAgentId) : null;
-      const chosenRate = scout && state.sourcingIncentive?.enabled
-        ? clampFindersRate(form.finderFeePercent?.value ?? getCarFindersRate(car))
+      const finderBonus = scout && state.sourcingIncentive?.enabled
+        ? clampFindersAmount(form.finderFeeAmount?.value ?? getCarFindersFeeAmount(car))
         : 0;
-      const finderBonus = scout && chosenRate > 0 ? Math.round(car.basePrice * (chosenRate / 100)) : 0;
 
       const badgeEl = document.getElementById('sold-modal-finder-badge');
       if (badgeEl && scout) {
-        badgeEl.textContent = `${chosenRate.toFixed(1)}% = ${formatPHP(finderBonus)}`;
+        badgeEl.textContent = `${formatPHP(finderBonus)} Fixed Fee`;
       }
 
       const leadership = isLeadership(getCurrentUser());
@@ -3771,13 +3765,13 @@
         </div>
         ${scout && finderBonus > 0 ? `
           <div class="flex items-center justify-between text-indigo-300 pt-1 border-t border-slate-800">
-            <span>Sourced Car Finder’s Fee (${escapeHtml(scout.name)} @ ${chosenRate.toFixed(1)}%):</span>
+            <span>Fixed Sourced Car Finder’s Fee (${escapeHtml(scout.name)}):</span>
             <strong class="text-indigo-300 text-sm">+${formatPHP(finderBonus)}</strong>
           </div>
           <p class="text-[10px] text-slate-400">
             ${scout.id === closer.id
               ? `Combined Total for ${escapeHtml(closer.name)}: ${formatPHP(closingPayout + finderBonus)}`
-              : `Split Payout: ${escapeHtml(scout.name)} receives Finder’s Fee &amp; ${escapeHtml(closer.name)} receives Closing Payout.`}
+              : `Split Payout: ${escapeHtml(scout.name)} receives Fixed Finder’s Fee &amp; ${escapeHtml(closer.name)} receives Closing Payout.`}
           </p>
         ` : ''}
         ${leadership ? `
@@ -3966,18 +3960,15 @@
         : Math.round(finalSellingPrice * (Number(state.commissionRate) / 100));
 
       const scoutId = car.sourcedByAgentId || null;
-      const appliedFinderRate = scoutId && state.sourcingIncentive?.enabled
-        ? clampFindersRate(form.finderFeePercent?.value ?? getCarFindersRate(car))
-        : 0;
-      const finderBonus = scoutId && appliedFinderRate > 0
-        ? Math.round(car.basePrice * (appliedFinderRate / 100))
+      const finderBonus = scoutId && state.sourcingIncentive?.enabled
+        ? clampFindersAmount(form.finderFeeAmount?.value ?? getCarFindersFeeAmount(car))
         : 0;
 
       const today = getDateOffsetStr(0);
       car.status = 'Sold';
       car.soldAt = today;
       car.soldByAgentId = closerId;
-      car.finderFeePercent = appliedFinderRate;
+      car.finderFeeAmount = finderBonus;
       car.reservation = null;
 
       state.bookings = state.bookings.filter(b => b.carId !== car.id);
@@ -3989,8 +3980,8 @@
         buyerName,
         agentId: closerId,
         sourcedByAgentId: scoutId,
-        finderFeePercent: appliedFinderRate,
         sourcingPriceBasis: car.basePrice,
+        sourcingTierLabel: getPriceTierLabel(car.basePrice),
         sourcingBonus: finderBonus,
         sourcingBonusReleased: false,
         payoutModel,
@@ -4017,7 +4008,7 @@
 
       const closerName = getUserRecord(closerId).name;
       const scoutMsg = scoutId && finderBonus > 0
-        ? ` + ${formatPHP(finderBonus)} (${appliedFinderRate.toFixed(1)}%) Finder's Fee credited to ${getUserRecord(scoutId).name}.`
+        ? ` + ${formatPHP(finderBonus)} Fixed Finder's Fee credited to ${getUserRecord(scoutId).name}.`
         : '.';
       emitLiveEvent(
         'Deal Closed & Payouts Credited!',
@@ -4066,8 +4057,8 @@
       saveState();
       renderApp();
       emitLiveEvent(
-        sale.sourcingBonusReleased ? 'Finder’s Fee Released' : 'Finder’s Fee Marked Pending',
-        `${getUserRecord(sale.sourcedByAgentId).name} — ${formatPHP(sale.sourcingBonus)} (${Number(sale.finderFeePercent || 0).toFixed(1)}%) on ${sale.carTitle}.`,
+        sale.sourcingBonusReleased ? 'Fixed Finder’s Fee Released' : 'Finder’s Fee Marked Pending',
+        `${getUserRecord(sale.sourcedByAgentId).name} — ${formatPHP(sale.sourcingBonus)} on ${sale.carTitle}.`,
         'indigo'
       );
     }
@@ -4191,7 +4182,7 @@
       const status = form.status.value;
       const sourcedByAgentId = form.sourcedByAgentId.value || null;
       const basePrice = acquisitionPrice + targetMargin;
-      const finderRate = sourcedByAgentId ? getAutoTieredFindersRate(basePrice) : 0;
+      const finderFeeAmount = sourcedByAgentId ? getAutoTieredFindersAmount(basePrice) : 0;
 
       const newCar = {
         id: 'car_' + Date.now(),
@@ -4208,7 +4199,7 @@
         basePrice,
         status,
         sourcedByAgentId,
-        finderFeePercent: finderRate,
+        finderFeeAmount,
         finderFeeAutoScaled: true,
         priorityLockUntil: sourcedByAgentId ? Date.now() + (48 * 60 * 60 * 1000) : null,
         soldAt: null,
@@ -4242,7 +4233,7 @@
       const askingPrice = Math.max(50000, Number(form.askingPrice.value) || 850000);
       const estRecon = Math.max(0, Number(form.estRecon.value) || 15000);
       const targetFloorPrice = Math.max(askingPrice, Number(form.targetFloorPrice.value) || (askingPrice + estRecon + 45000));
-      const finderFeePercent = clampFindersRate(form.finderFeePercent?.value ?? getAutoTieredFindersRate(targetFloorPrice));
+      const finderFeeAmount = clampFindersAmount(form.finderFeeAmount?.value ?? getAutoTieredFindersAmount(targetFloorPrice));
       const sellerName = form.sellerName.value.trim();
       const sellerPhone = form.sellerPhone.value.trim();
       const location = form.location.value.trim();
@@ -4257,7 +4248,7 @@
         askingPrice,
         estRecon,
         targetFloorPrice,
-        finderFeePercent,
+        finderFeeAmount,
         sellerName,
         sellerPhone,
         location,
@@ -4271,7 +4262,7 @@
       renderApp();
       emitLiveEvent(
         'Off-Market Lead Submitted',
-        `${getUserRecord(agentId).name} pitched ${makeModel} (${finderFeePercent.toFixed(1)}% Finder's Fee).`,
+        `${getUserRecord(agentId).name} pitched ${makeModel} (${formatPHP(finderFeeAmount)} Fixed Finder's Fee).`,
         'indigo'
       );
     }
@@ -4301,7 +4292,7 @@
       const reconAmt = Number(lead.estRecon) || 15000;
       const basePrice = Number(lead.targetFloorPrice) || (acquisitionPrice + reconAmt + 45000);
       const targetMargin = Math.max(0, basePrice - acquisitionPrice - reconAmt);
-      const lockedRate = clampFindersRate(lead.finderFeePercent ?? getAutoTieredFindersRate(basePrice));
+      const lockedFee = clampFindersAmount(lead.finderFeeAmount ?? getAutoTieredFindersAmount(basePrice));
 
       state.cars.unshift({
         id: 'car_' + Date.now(),
@@ -4320,13 +4311,13 @@
         basePrice,
         status: 'Get the Car (Intake)',
         sourcedByAgentId: lead.agentId,
-        finderFeePercent: lockedRate,
+        finderFeeAmount: lockedFee,
         finderFeeAutoScaled: false,
         priorityLockUntil: Date.now() + (48 * 60 * 60 * 1000),
         soldAt: null,
         soldByAgentId: null,
         photos: [
-          { label: 'Sourced Unit Intake', url: makeCarSamplePhoto(lead.makeModel, '#312e81', '#818cf8', `${lockedRate.toFixed(1)}% SCOUTED`) }
+          { label: 'Sourced Unit Intake', url: makeCarSamplePhoto(lead.makeModel, '#312e81', '#818cf8', `${formatPHP(lockedFee)} SCOUTED`) }
         ],
         checklist: {
           orcr_docs: true, no_lto_alarm: true, open_deed_ids: true,
@@ -4341,7 +4332,7 @@
       renderApp();
       emitLiveEvent(
         'Lead Acquired to Under Prep!',
-        `${lead.makeModel} moved to Under Prep with ${lockedRate.toFixed(1)}% Finder’s Fee locked to ${getUserRecord(lead.agentId).name}.`,
+        `${lead.makeModel} moved to Under Prep with ${formatPHP(lockedFee)} Fixed Finder’s Fee locked to ${getUserRecord(lead.agentId).name}.`,
         'emerald'
       );
     }
@@ -4414,21 +4405,21 @@
         ...getDefaultSourcingIncentiveConfig(),
         enabled: form.enabled.checked,
         mode: form.mode.value,
-        tier1Rate: clampFindersRate(form.tier1Rate.value),
-        tier2Rate: clampFindersRate(form.tier2Rate.value),
-        tier3Rate: clampFindersRate(form.tier3Rate.value),
-        flatRate: clampFindersRate(form.flatRate.value)
+        tier1Amount: clampFindersAmount(form.tier1Amount.value),
+        tier2Amount: clampFindersAmount(form.tier2Amount.value),
+        tier3Amount: clampFindersAmount(form.tier3Amount.value),
+        flatAmount: clampFindersAmount(form.flatAmount.value)
       };
 
       state.cars.forEach(car => {
         if (!isCarSold(car) && car.sourcedByAgentId && car.finderFeeAutoScaled !== false) {
-          car.finderFeePercent = getAutoTieredFindersRate(car.basePrice);
+          car.finderFeeAmount = getAutoTieredFindersAmount(car.basePrice);
         }
       });
 
       saveState();
       renderApp();
-      emitLiveEvent('Finder’s Fee Rules Saved', `Active scale: ${getSourcingRuleLabel()}.`, 'indigo');
+      emitLiveEvent('Fixed Finder’s Fee Rules Saved', `Active scale: ${getSourcingRuleLabel()}.`, 'indigo');
     }
 
     function setTeamMemberRole(memberId, newTier) {
@@ -4451,7 +4442,7 @@
       saveState();
       renderApp();
       if (!forceSilent) {
-        emitLiveEvent('Demo Reset Complete', 'Magief Cars AutoBook v2.0 restored with default inventory, proofs & 1.0%–3.0% Finder’s Fees.', 'emerald');
+        emitLiveEvent('Demo Reset Complete', 'Magief Cars AutoBook v2.0 restored with default inventory, proofs & ₱3,000–₱10,000 Fixed Finder’s Fees.', 'emerald');
       }
     }
 
@@ -4466,7 +4457,7 @@
       const headers = [
         'Sale ID', 'Date', 'Vehicle', 'Buyer', 'Closing Agent', 'Closing Model',
         'Closing Payout (PHP)', 'Closing Released',
-        'Sourcing Agent', 'Finder Fee Rate (%)', 'Price Basis (PHP)', 'Finder Incentive (PHP)', 'Finder Released',
+        'Sourcing Agent', 'Price Tier', 'Fixed Finder Fee (PHP)', 'Finder Released',
         'Payment Channel', 'Reference No', 'Funds Status', 'Base Floor Price (PHP)', 'Final Selling Price (PHP)'
       ];
 
@@ -4476,7 +4467,7 @@
         const scout = s.sourcedByAgentId ? getUserRecord(s.sourcedByAgentId).name : 'Direct Lot';
         const basis = Number(s.sourcingPriceBasis) || Number(s.basePriceSnapshot) || 0;
         const bonus = Number(s.sourcingBonus) || 0;
-        const rate = Number(s.finderFeePercent) || (basis > 0 ? ((bonus / basis) * 100) : 0);
+        const tierLabel = s.sourcingTierLabel || getPriceTierLabel(basis);
 
         const cols = [
           s.id,
@@ -4488,8 +4479,7 @@
           Number(s.agentPayout) || 0,
           s.closingPayoutReleased ? 'Released' : 'Pending',
           `"${scout}"`,
-          s.sourcedByAgentId ? rate.toFixed(1) : '0.0',
-          basis,
+          `"${s.sourcedByAgentId ? tierLabel : 'N/A'}"`,
           bonus,
           s.sourcedByAgentId ? (s.sourcingBonusReleased ? 'Released' : 'Pending') : 'N/A',
           `"${String(s.paymentChannel || '').replace(/"/g, '""')}"`,
