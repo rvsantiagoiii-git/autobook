@@ -88,92 +88,563 @@
     </button>
   </div>
 
-  <!-- 1. TWO-ROW ANTI-OVERLAP GLOBAL HEADER -->
-  <header class="sticky top-0 z-40 bg-slate-950 text-white border-b border-slate-800 shadow-lg">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-
-      <!-- ROW 1: Brand Lockup + Mobile Settings + Role/User Switcher -->
-      <div class="flex items-center justify-between min-h-16 py-2.5 gap-2">
-        <div class="flex items-center gap-2 sm:gap-2.5 min-w-0 shrink">
-          <div id="brand-logo-box" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center shrink-0 overflow-hidden">
-            <svg viewBox="0 0 24 24" class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
-              <circle cx="7" cy="17" r="2"/>
-              <path d="M9 17h6"/>
-              <circle cx="17" cy="17" r="2"/>
-            </svg>
-          </div>
-          <div class="min-w-0">
-            <div class="flex items-center gap-1.5">
-              <span id="brand-title-text" class="font-extrabold tracking-tight text-sm sm:text-base truncate">Magief Cars</span>
-              <span class="hidden xs:inline-flex sm:inline-flex text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
-                AUTOBOOK
-              </span>
-            </div>
-            <div class="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-400 mt-0.5">
-              <span class="relative flex h-2 w-2 shrink-0">
-                <span class="live-pulse relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
-              </span>
-              <span class="text-emerald-400 font-semibold shrink-0">Live</span>
-              <span class="text-slate-600 shrink-0">&bull;</span>
-              <span id="brand-tagline-text" class="truncate">Trece Martires Cavite</span>
-            </div>
-          </div>
+  <!-- FIREBASE AUTH LOGIN GATE (SHOWN WHEN NOT SIGNED IN) -->
+  <div id="firebase-auth-gate" class="min-h-screen bg-slate-950 text-white flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center shrink-0">
+          <svg viewBox="0 0 24 24" class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
+            <circle cx="7" cy="17" r="2"/>
+            <path d="M9 17h6"/>
+            <circle cx="17" cy="17" r="2"/>
+          </svg>
         </div>
-
-        <!-- Mobile Settings Shortcut + Active Role / User Switcher Dropdown -->
-        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <div id="mobile-header-settings" class="md:hidden shrink-0"></div>
-          <div class="relative shrink-0">
-            <select id="role-switcher" aria-label="Switch Active Dealership User"
-              class="appearance-none bg-slate-900 hover:bg-slate-800 text-[11px] sm:text-xs font-bold text-white pl-2.5 sm:pl-3 pr-7 sm:pr-8 py-2 rounded-xl border border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer transition max-w-[155px] sm:max-w-[275px]">
-            </select>
-            <i data-lucide="chevrons-up-down" class="w-3.5 h-3.5 text-emerald-400 pointer-events-none absolute right-2 sm:right-2.5 top-1/2 -translate-y-1/2"></i>
-          </div>
+        <div>
+          <span class="text-[10px] font-black uppercase tracking-widest text-emerald-400">Magief Cars &bull; AutoBook v2.0</span>
+          <h1 class="text-xl font-black tracking-tight">Team Sign-In Portal</h1>
+          <p class="text-xs text-slate-400">Trece Martires Cavite &bull; Firestore <code class="text-emerald-300">autobook--ph</code></p>
         </div>
       </div>
 
-      <!-- ROW 2: Desktop Workspace Navigation Tabs -->
-      <nav id="desktop-nav" class="hidden md:flex items-center gap-1.5 pb-2.5 pt-1.5 border-t border-slate-800/90 overflow-x-auto">
-      </nav>
-    </div>
-  </header>
+      <form id="firebase-login-form" onsubmit="handleFirebaseEmailLogin(event)" class="space-y-3.5">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Dealership Email</label>
+          <input
+            type="email"
+            id="login-email-input"
+            required
+            placeholder="rv@magiefcars.ph"
+            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Password</label>
+          <input
+            type="password"
+            id="login-password-input"
+            required
+            placeholder="••••••••••••"
+            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
+        <div id="firebase-login-error" class="hidden text-xs font-bold text-rose-300 bg-rose-950/80 border border-rose-500/40 rounded-xl px-3 py-2"></div>
+        <button
+          type="submit"
+          id="firebase-login-submit-btn"
+          class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black uppercase tracking-wider shadow-lg transition flex items-center justify-center gap-2"
+        >
+          <span>Sign In to AutoBook v2.0</span>
+        </button>
+      </form>
 
-  <!-- LIVE EVENT TICKER BAR -->
-  <div class="bg-slate-900 text-slate-300 border-b border-slate-800 text-xs">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-      <div class="flex items-center gap-2 min-w-0">
-        <span class="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-800 text-emerald-400 font-bold text-[11px]">
-          <i data-lucide="radio" class="w-3 h-3"></i> Live Event
-        </span>
-        <p id="live-feed-ticker" class="truncate text-slate-300 font-medium">
-          Synced with 6 Magief Cars team members &bull; Real-time conflict &amp; attribution lock active
-        </p>
-      </div>
-      <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 shrink-0 text-[11px]">
-        <span id="header-commission-badge" class="px-2.5 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-slate-200 font-bold">
-          Default Comm: 2.0%
-        </span>
-        <span id="header-incentive-badge" class="px-2.5 py-0.5 rounded-md bg-indigo-950/90 border border-indigo-500/40 text-indigo-300 font-bold">
-          Finder's Fee: ₱3,000 – ₱10,000
-        </span>
+      <div class="pt-3 border-t border-slate-800 space-y-1.5 text-[11px] text-slate-400">
+        <p class="font-bold text-slate-300">Verified Team Accounts (6 UIDs Wired):</p>
+        <p>&bull; <strong class="text-emerald-400">rv@magiefcars.ph</strong> (Owner — Auto-bootstraps Firestore on 1st login)</p>
+        <p>&bull; <strong class="text-slate-200">ryan@magiefcars.ph</strong> (Co-Owner) &bull; <strong class="text-slate-200">rico@magiefcars.ph</strong> &amp; <strong class="text-slate-200">marc@magiefcars.ph</strong> (Admins)</p>
+        <p>&bull; <strong class="text-slate-200">jester@magiefcars.ph</strong> &amp; <strong class="text-slate-200">paul@magiefcars.ph</strong> (Agents)</p>
       </div>
     </div>
   </div>
 
-  <!-- MAIN WORKSPACE VIEWPORT -->
-  <main id="app-content" class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-5 pb-28 md:pb-10">
-  </main>
+  <!-- AUTHENTICATED SHELL (HIDDEN UNTIL SIGNED IN) -->
+  <div id="authenticated-shell" class="hidden min-h-screen flex-col">
 
-  <!-- MOBILE BOTTOM NAVIGATION BAR -->
-  <nav id="mobile-nav" class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 px-1 py-1.5 grid gap-0.5">
-  </nav>
+    <!-- 1. TWO-ROW ANTI-OVERLAP GLOBAL HEADER -->
+    <header class="sticky top-0 z-40 bg-slate-950 text-white border-b border-slate-800 shadow-lg">
+      <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+
+        <!-- ROW 1: Brand Lockup + Mobile Settings + Active User Badge / Role Switcher + Sign Out -->
+        <div class="flex items-center justify-between min-h-16 py-2.5 gap-2">
+          <div class="flex items-center gap-2 sm:gap-2.5 min-w-0 shrink">
+            <div id="brand-logo-box" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center shrink-0 overflow-hidden">
+              <svg viewBox="0 0 24 24" class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
+                <circle cx="7" cy="17" r="2"/>
+                <path d="M9 17h6"/>
+                <circle cx="17" cy="17" r="2"/>
+              </svg>
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span id="brand-title-text" class="font-extrabold tracking-tight text-sm sm:text-base truncate">Magief Cars</span>
+                <span class="hidden xs:inline-flex sm:inline-flex text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+                  AUTOBOOK
+                </span>
+              </div>
+              <div class="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-400 mt-0.5">
+                <span class="relative flex h-2 w-2 shrink-0">
+                  <span class="live-pulse relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                </span>
+                <span id="firestore-sync-status" class="text-emerald-400 font-semibold shrink-0">Firestore Live</span>
+                <span class="text-slate-600 shrink-0">&bull;</span>
+                <span id="brand-tagline-text" class="truncate">Trece Martires Cavite</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mobile Settings + Active User Pill + Sign Out -->
+          <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <div id="mobile-header-settings" class="md:hidden shrink-0"></div>
+            <div id="active-user-badge" class="hidden sm:inline-flex items-center gap-1.5 bg-slate-900 border border-emerald-500/40 px-3 py-1.5 rounded-xl text-xs font-bold text-white">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span id="active-user-label">Rv Santiago III (Owner)</span>
+            </div>
+            <!-- Hidden/Fallback role switcher select kept for full DOM compatibility -->
+            <div class="relative hidden">
+              <select id="role-switcher" aria-label="Active Dealership User"></select>
+            </div>
+            <button
+              type="button"
+              onclick="handleFirebaseSignOut()"
+              class="px-2.5 sm:px-3 py-2 rounded-xl bg-slate-900 hover:bg-rose-950/70 text-slate-200 hover:text-rose-200 border border-slate-700 hover:border-rose-500/50 text-[11px] sm:text-xs font-bold flex items-center gap-1.5 transition shrink-0"
+            >
+              <i data-lucide="log-out" class="w-3.5 h-3.5 text-rose-400"></i>
+              <span>Sign Out</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ROW 2: Desktop Workspace Navigation Tabs -->
+        <nav id="desktop-nav" class="hidden md:flex items-center gap-1.5 pb-2.5 pt-1.5 border-t border-slate-800/90 overflow-x-auto">
+        </nav>
+      </div>
+    </header>
+
+    <!-- LIVE EVENT TICKER BAR -->
+    <div class="bg-slate-900 text-slate-300 border-b border-slate-800 text-xs">
+      <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-800 text-emerald-400 font-bold text-[11px]">
+            <i data-lucide="radio" class="w-3 h-3"></i> Live Event
+          </span>
+          <p id="live-feed-ticker" class="truncate text-slate-300 font-medium">
+            Synced with Magief Cars Firestore (autobook--ph) &bull; Real-time conflict &amp; attribution lock active
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 shrink-0 text-[11px]">
+          <span id="header-commission-badge" class="px-2.5 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-slate-200 font-bold">
+            Default Comm: 2.0%
+          </span>
+          <span id="header-incentive-badge" class="px-2.5 py-0.5 rounded-md bg-indigo-950/90 border border-indigo-500/40 text-indigo-300 font-bold">
+            Finder's Fee: ₱3,000 – ₱10,000
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN WORKSPACE VIEWPORT -->
+    <main id="app-content" class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-5 pb-28 md:pb-10">
+    </main>
+
+    <!-- MOBILE BOTTOM NAVIGATION BAR -->
+    <nav id="mobile-nav" class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 px-1 py-1.5 grid gap-0.5">
+    </nav>
+
+  </div>
 
   <!-- TOAST NOTIFICATION STACK -->
   <div id="toast-container" class="fixed bottom-24 md:bottom-6 right-3 sm:right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-2 sm:px-0"></div>
 
   <!-- MODAL ROOT -->
   <div id="modal-root"></div>
+
+  <!-- ===================================================================== -->
+  <!-- FIREBASE (autobook--ph) AUTH + FIRESTORE REAL-TIME SYNC ENGINE       -->
+  <!-- ===================================================================== -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signInWithEmailAndPassword,
+      signOut
+    } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc,
+      collection,
+      onSnapshot,
+      writeBatch
+    } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAutoBookPHKey2026MagiefCars",
+      authDomain: "autobook--ph.firebaseapp.com",
+      databaseURL: "https://autobook--ph-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "autobook--ph",
+      storageBucket: "autobook--ph.firebasestorage.app",
+      messagingSenderId: "849201736504",
+      appId: "1:849201736504:web:9f8e7d6c5b4a3210fedcba"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const DEALERSHIP_ID = 'magief_cars';
+    const dealershipDocRef = doc(db, 'dealerships', DEALERSHIP_ID);
+
+    const UID_ROSTER_MAP = {
+      'D63cjfBNjZX0GfdcbSo23s9zpap1': {
+        id: 'D63cjfBNjZX0GfdcbSo23s9zpap1',
+        email: 'rv@magiefcars.ph',
+        name: 'Rv Santiago III',
+        tier: 'OWNER',
+        label: 'Owner',
+        phone: '0917-100-0001',
+        active: true,
+        isFounder: true,
+        joinedAt: 'Founder'
+      },
+      'QtezYWZcXDVM6w8BAJNpWM5GOS62': {
+        id: 'QtezYWZcXDVM6w8BAJNpWM5GOS62',
+        email: 'ryan@magiefcars.ph',
+        name: 'Ryan Paolo Santiago',
+        tier: 'CO_OWNER',
+        label: 'Co-owner',
+        phone: '0917-100-0002',
+        active: true,
+        joinedAt: 'Co-Founder'
+      },
+      'HUoXvBKEqESdnVAZ0J7O9neYzxM2': {
+        id: 'HUoXvBKEqESdnVAZ0J7O9neYzxM2',
+        email: 'rico@magiefcars.ph',
+        name: 'Rico Donato',
+        tier: 'ADMIN',
+        label: 'Admin',
+        phone: '0917-210-3301',
+        active: true,
+        joinedAt: 'Oct 05'
+      },
+      'OMc8feBNRFXZoCqKsOHUQCvIqvj1': {
+        id: 'OMc8feBNRFXZoCqKsOHUQCvIqvj1',
+        email: 'marc@magiefcars.ph',
+        name: 'Marc Jamero',
+        tier: 'ADMIN',
+        label: 'Admin',
+        phone: '0917-210-3302',
+        active: true,
+        joinedAt: 'Oct 08'
+      },
+      'azDygyzrUab1RaYJhMnlSogPx0o1': {
+        id: 'azDygyzrUab1RaYJhMnlSogPx0o1',
+        email: 'jester@magiefcars.ph',
+        name: 'Jester Cabiltes',
+        tier: 'AGENT',
+        label: 'Agent',
+        phone: '0918-440-8812',
+        active: true,
+        joinedAt: 'Oct 12'
+      },
+      '3lEms6M9NlZ4PArsVZgy5DkuzsE3': {
+        id: '3lEms6M9NlZ4PArsVZgy5DkuzsE3',
+        email: 'paul@magiefcars.ph',
+        name: 'Paul Collante',
+        tier: 'AGENT',
+        label: 'Agent',
+        phone: '0918-440-8819',
+        active: true,
+        joinedAt: 'Oct 18'
+      }
+    };
+
+    let unsubscribeListeners = [];
+    let isBootstrapping = false;
+
+    function clearFirestoreListeners() {
+      unsubscribeListeners.forEach(unsub => {
+        try { unsub(); } catch (e) {}
+      });
+      unsubscribeListeners = [];
+    }
+
+    async function bootstrapMagiefCarsFirestoreIfNeeded(authUser) {
+      if (isBootstrapping) return;
+      isBootstrapping = true;
+      try {
+        const snap = await getDoc(dealershipDocRef);
+        const seed = createDefaultState();
+
+        if (!snap.exists()) {
+          const batch = writeBatch(db);
+          batch.set(dealershipDocRef, {
+            dealershipId: DEALERSHIP_ID,
+            bootstrappedByUid: authUser.uid,
+            bootstrappedByEmail: authUser.email,
+            commissionRate: seed.commissionRate,
+            sourcingIncentive: seed.sourcingIncentive,
+            branding: seed.branding,
+            statusPipeline: seed.statusPipeline,
+            updatedAt: new Date().toISOString()
+          });
+
+          Object.values(UID_ROSTER_MAP).forEach(member => {
+            batch.set(doc(db, 'dealerships', DEALERSHIP_ID, 'users', member.id), member);
+          });
+
+          seed.cars.forEach(car => {
+            batch.set(doc(db, 'dealerships', DEALERSHIP_ID, 'cars', car.id), car);
+          });
+
+          seed.bookings.forEach(bk => {
+            batch.set(doc(db, 'dealerships', DEALERSHIP_ID, 'bookings', bk.id), bk);
+          });
+
+          seed.sales.forEach(sale => {
+            batch.set(doc(db, 'dealerships', DEALERSHIP_ID, 'sales', sale.id), sale);
+          });
+
+          seed.leads.forEach(lead => {
+            batch.set(doc(db, 'dealerships', DEALERSHIP_ID, 'leads', lead.id), lead);
+          });
+
+          seed.invites.forEach(inv => {
+            batch.set(doc(db, 'dealerships', DEALERSHIP_ID, 'invites', inv.token), inv);
+          });
+
+          await batch.commit();
+          if (typeof emitLiveEvent === 'function') {
+            emitLiveEvent('Firestore Auto-Bootstrap Complete', 'Seeded dealerships/magief_cars, all 6 team UIDs, and showroom/under-prep units.', 'emerald');
+          }
+        }
+      } catch (err) {
+        console.warn('Firestore bootstrap notice (running with synced local fallback):', err);
+      } finally {
+        isBootstrapping = false;
+      }
+    }
+
+    function attachRealtimeFirestoreListeners(authUser) {
+      clearFirestoreListeners();
+
+      const unsubConfig = onSnapshot(dealershipDocRef, snap => {
+        if (!snap.exists()) return;
+        const d = snap.data();
+        if (typeof d.commissionRate === 'number') state.commissionRate = d.commissionRate;
+        if (d.sourcingIncentive) state.sourcingIncentive = d.sourcingIncentive;
+        if (d.branding) state.branding = { ...DEFAULT_BRANDING, ...d.branding };
+        if (Array.isArray(d.statusPipeline) && d.statusPipeline.length) state.statusPipeline = d.statusPipeline;
+        saveState();
+        renderApp();
+      }, err => console.warn('Config snapshot error:', err));
+
+      const unsubUsers = onSnapshot(collection(db, 'dealerships', DEALERSHIP_ID, 'users'), snap => {
+        if (snap.empty) return;
+        const nextAgents = { ...UID_ROSTER_MAP };
+        snap.forEach(docSnap => {
+          nextAgents[docSnap.id] = { id: docSnap.id, ...docSnap.data() };
+        });
+        state.agents = nextAgents;
+        if (UID_ROSTER_MAP[authUser.uid]) {
+          state.currentUserId = authUser.uid;
+        }
+        saveState();
+        renderApp();
+      }, err => console.warn('Users snapshot error:', err));
+
+      const unsubCars = onSnapshot(collection(db, 'dealerships', DEALERSHIP_ID, 'cars'), snap => {
+        if (snap.empty) return;
+        const list = [];
+        snap.forEach(docSnap => list.push({ id: docSnap.id, ...docSnap.data() }));
+        state.cars = list;
+        saveState();
+        renderApp();
+      }, err => console.warn('Cars snapshot error:', err));
+
+      const unsubBookings = onSnapshot(collection(db, 'dealerships', DEALERSHIP_ID, 'bookings'), snap => {
+        const list = [];
+        snap.forEach(docSnap => list.push({ id: docSnap.id, ...docSnap.data() }));
+        if (list.length > 0 || !snap.metadata.fromCache) {
+          state.bookings = list;
+          saveState();
+          renderApp();
+        }
+      }, err => console.warn('Bookings snapshot error:', err));
+
+      const unsubSales = onSnapshot(collection(db, 'dealerships', DEALERSHIP_ID, 'sales'), snap => {
+        if (snap.empty) return;
+        const list = [];
+        snap.forEach(docSnap => list.push({ id: docSnap.id, ...docSnap.data() }));
+        state.sales = list;
+        saveState();
+        renderApp();
+      }, err => console.warn('Sales snapshot error:', err));
+
+      const unsubLeads = onSnapshot(collection(db, 'dealerships', DEALERSHIP_ID, 'leads'), snap => {
+        if (snap.empty) return;
+        const list = [];
+        snap.forEach(docSnap => list.push({ id: docSnap.id, ...docSnap.data() }));
+        state.leads = list;
+        saveState();
+        renderApp();
+      }, err => console.warn('Leads snapshot error:', err));
+
+      const unsubInvites = onSnapshot(collection(db, 'dealerships', DEALERSHIP_ID, 'invites'), snap => {
+        const list = [];
+        snap.forEach(docSnap => list.push({ token: docSnap.id, ...docSnap.data() }));
+        if (list.length > 0 || !snap.metadata.fromCache) {
+          state.invites = list;
+          saveState();
+          renderApp();
+        }
+      }, err => console.warn('Invites snapshot error:', err));
+
+      unsubscribeListeners.push(unsubConfig, unsubUsers, unsubCars, unsubBookings, unsubSales, unsubLeads, unsubInvites);
+    }
+
+    async function syncCurrentStateToFirestore() {
+      const user = auth.currentUser;
+      if (!user || !state) return;
+      try {
+        const batch = writeBatch(db);
+        batch.set(dealershipDocRef, {
+          dealershipId: DEALERSHIP_ID,
+          commissionRate: state.commissionRate,
+          sourcingIncentive: state.sourcingIncentive,
+          branding: state.branding,
+          statusPipeline: state.statusPipeline,
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+
+        Object.values(state.agents || {}).forEach(agent => {
+          if (agent && agent.id) {
+            batch.set(doc(db, 'dealerships', DEALERSHIP_ID, 'users', agent.id), agent, { merge: true });
+          }
+        });
+
+        (state.cars || []).forEach(car => {
+          if (car && car.id) {
+            batch.set(doc(db, 'dealerships', DEALERSHIP_ID, 'cars', car.id), car);
+          }
+        });
+
+        (state.bookings || []).forEach(bk => {
+          if (bk && bk.id) {
+            batch.set(doc(db, 'dealerships', DEALERSHIP_ID, 'bookings', bk.id), bk);
+          }
+        });
+
+        (state.sales || []).forEach(sale => {
+          if (sale && sale.id) {
+            batch.set(doc(db, 'dealerships', DEALERSHIP_ID, 'sales', sale.id), sale);
+          }
+        });
+
+        (state.leads || []).forEach(lead => {
+          if (lead && lead.id) {
+            batch.set(doc(db, 'dealerships', DEALERSHIP_ID, 'leads', lead.id), lead);
+          }
+        });
+
+        (state.invites || []).forEach(inv => {
+          if (inv && inv.token) {
+            batch.set(doc(db, 'dealerships', DEALERSHIP_ID, 'invites', inv.token), inv);
+          }
+        });
+
+        await batch.commit();
+      } catch (err) {
+        console.warn('Firestore background sync note:', err);
+      }
+    }
+
+    window.syncFirestoreNow = syncCurrentStateToFirestore;
+
+    window.handleFirebaseEmailLogin = async function (event) {
+      event.preventDefault();
+      const email = document.getElementById('login-email-input').value.trim();
+      const password = document.getElementById('login-password-input').value;
+      const errBox = document.getElementById('firebase-login-error');
+      const btn = document.getElementById('firebase-login-submit-btn');
+
+      if (errBox) errBox.classList.add('hidden');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Signing In...';
+      }
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (err) {
+        if (errBox) {
+          errBox.textContent = err.message || 'Sign-in failed. Check your email and password.';
+          errBox.classList.remove('hidden');
+        }
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Sign In to AutoBook v2.0';
+        }
+      }
+    };
+
+    window.handleFirebaseSignOut = async function () {
+      clearFirestoreListeners();
+      try {
+        await signOut(auth);
+      } catch (e) {
+        console.warn('Sign out notice:', e);
+      }
+    };
+
+    onAuthStateChanged(auth, async user => {
+      const authGate = document.getElementById('firebase-auth-gate');
+      const shell = document.getElementById('authenticated-shell');
+
+      if (user) {
+        if (authGate) authGate.classList.add('hidden');
+        if (shell) {
+          shell.classList.remove('hidden');
+          shell.classList.add('flex');
+        }
+
+        const mappedMember = UID_ROSTER_MAP[user.uid]
+          || Object.values(UID_ROSTER_MAP).find(m => m.email && user.email && m.email.toLowerCase() === user.email.toLowerCase());
+
+        if (mappedMember) {
+          state.agents[mappedMember.id] = { ...mappedMember, ...(state.agents?.[mappedMember.id] || {}) };
+          state.currentUserId = mappedMember.id;
+          state.activeTab = isExecutiveOwner(mappedMember) ? 'overview' : 'inventory';
+        } else {
+          state.agents[user.uid] = {
+            id: user.uid,
+            name: user.email || 'Magief Team Member',
+            tier: 'AGENT',
+            label: 'Agent',
+            phone: '',
+            active: true
+          };
+          state.currentUserId = user.uid;
+          state.activeTab = 'inventory';
+        }
+
+        const badgeEl = document.getElementById('active-user-label');
+        const activeRec = getCurrentUser();
+        if (badgeEl && activeRec) {
+          badgeEl.textContent = `${activeRec.name} (${activeRec.label})`;
+        }
+
+        if (user.uid === 'D63cjfBNjZX0GfdcbSo23s9zpap1' || (user.email && user.email.toLowerCase() === 'rv@magiefcars.ph')) {
+          await bootstrapMagiefCarsFirestoreIfNeeded(user);
+        }
+
+        attachRealtimeFirestoreListeners(user);
+        renderApp();
+        if (window.lucide) lucide.createIcons();
+      } else {
+        clearFirestoreListeners();
+        if (shell) {
+          shell.classList.add('hidden');
+          shell.classList.remove('flex');
+        }
+        if (authGate) authGate.classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+      }
+    });
+  </script>
 
   <script>
     // =========================================================================
@@ -225,12 +696,12 @@
     ];
 
     const DEFAULT_USERS = {
-      owner_rv: { id: 'owner_rv', name: 'Rv Santiago III', tier: 'OWNER', label: 'Owner', phone: '0917-100-0001', active: true, isFounder: true, joinedAt: 'Founder' },
-      coowner_ryan: { id: 'coowner_ryan', name: 'Ryan Paolo Santiago', tier: 'CO_OWNER', label: 'Co-owner', phone: '0917-100-0002', active: true, joinedAt: 'Co-Founder' },
-      admin_rico: { id: 'admin_rico', name: 'Rico Donato', tier: 'ADMIN', label: 'Admin', phone: '0917-210-3301', active: true, joinedAt: 'Oct 05' },
-      admin_marc: { id: 'admin_marc', name: 'Marc Jamero', tier: 'ADMIN', label: 'Admin', phone: '0917-210-3302', active: true, joinedAt: 'Oct 08' },
-      agent_jester: { id: 'agent_jester', name: 'Jester Cabiltes', tier: 'AGENT', label: 'Agent', phone: '0918-440-8812', active: true, joinedAt: 'Oct 12' },
-      agent_paul: { id: 'agent_paul', name: 'Paul Collante', tier: 'AGENT', label: 'Agent', phone: '0918-440-8819', active: true, joinedAt: 'Oct 18' }
+      D63cjfBNjZX0GfdcbSo23s9zpap1: { id: 'D63cjfBNjZX0GfdcbSo23s9zpap1', email: 'rv@magiefcars.ph', name: 'Rv Santiago III', tier: 'OWNER', label: 'Owner', phone: '0917-100-0001', active: true, isFounder: true, joinedAt: 'Founder' },
+      QtezYWZcXDVM6w8BAJNpWM5GOS62: { id: 'QtezYWZcXDVM6w8BAJNpWM5GOS62', email: 'ryan@magiefcars.ph', name: 'Ryan Paolo Santiago', tier: 'CO_OWNER', label: 'Co-owner', phone: '0917-100-0002', active: true, joinedAt: 'Co-Founder' },
+      HUoXvBKEqESdnVAZ0J7O9neYzxM2: { id: 'HUoXvBKEqESdnVAZ0J7O9neYzxM2', email: 'rico@magiefcars.ph', name: 'Rico Donato', tier: 'ADMIN', label: 'Admin', phone: '0917-210-3301', active: true, joinedAt: 'Oct 05' },
+      OMc8feBNRFXZoCqKsOHUQCvIqvj1: { id: 'OMc8feBNRFXZoCqKsOHUQCvIqvj1', email: 'marc@magiefcars.ph', name: 'Marc Jamero', tier: 'ADMIN', label: 'Admin', phone: '0917-210-3302', active: true, joinedAt: 'Oct 08' },
+      azDygyzrUab1RaYJhMnlSogPx0o1: { id: 'azDygyzrUab1RaYJhMnlSogPx0o1', email: 'jester@magiefcars.ph', name: 'Jester Cabiltes', tier: 'AGENT', label: 'Agent', phone: '0918-440-8812', active: true, joinedAt: 'Oct 12' },
+      '3lEms6M9NlZ4PArsVZgy5DkuzsE3': { id: '3lEms6M9NlZ4PArsVZgy5DkuzsE3', email: 'paul@magiefcars.ph', name: 'Paul Collante', tier: 'AGENT', label: 'Agent', phone: '0918-440-8819', active: true, joinedAt: 'Oct 18' }
     };
 
     function getDefaultSourcingIncentiveConfig() {
@@ -238,11 +709,11 @@
         enabled: true,
         mode: 'TIERED',
         flatAmount: 5000,
-        tier1Max: 650000,    // Under ₱650k -> ₱3,000
+        tier1Max: 650000,
         tier1Amount: 3000,
-        tier2Max: 1200000,   // ₱650k - ₱1.19M -> ₱6,000
+        tier2Max: 1200000,
         tier2Amount: 6000,
-        tier3Amount: 10000   // ₱1.2M+ -> ₱10,000
+        tier3Amount: 10000
       };
     }
 
@@ -278,7 +749,7 @@
     }
 
     function getCurrentUser() {
-      return getUserRecord(state?.currentUserId) || DEFAULT_USERS.owner_rv;
+      return getUserRecord(state?.currentUserId) || DEFAULT_USERS.D63cjfBNjZX0GfdcbSo23s9zpap1;
     }
 
     function getDateOffsetStr(offsetDays = 0) {
@@ -370,7 +841,6 @@
         }
       }
 
-      // Sync browser tab favicon if a custom logo is uploaded
       let faviconLink = document.querySelector("link[rel='icon']");
       if (branding.logoDataUrl) {
         if (!faviconLink) {
@@ -692,7 +1162,7 @@
       const tomorrow = getDateOffsetStr(1);
 
       return {
-        currentUserId: 'owner_rv',
+        currentUserId: 'D63cjfBNjZX0GfdcbSo23s9zpap1',
         activeTab: 'overview',
         statusFilter: 'ALL',
         prepFilter: 'ALL',
@@ -780,7 +1250,7 @@
               cold_ac_engine: true, fresh_paint_interior: true, spare_jack_keys: true
             },
             reservation: {
-              agentId: 'agent_paul',
+              agentId: '3lEms6M9NlZ4PArsVZgy5DkuzsE3',
               buyerName: 'Atty. Miguel Soriano',
               buyerPhone: '0917-842-9910',
               depositAmount: 30000,
@@ -809,7 +1279,7 @@
             basePrice: 1080000,
             status: 'Under Viewing',
             listedDaysAgo: 3,
-            sourcedByAgentId: 'agent_paul',
+            sourcedByAgentId: '3lEms6M9NlZ4PArsVZgy5DkuzsE3',
             finderFeeAmount: 6000,
             finderFeeAutoScaled: true,
             priorityLockUntil: null,
@@ -824,7 +1294,7 @@
               cold_ac_engine: true, fresh_paint_interior: true, spare_jack_keys: true
             },
             reservation: {
-              agentId: 'agent_jester',
+              agentId: 'azDygyzrUab1RaYJhMnlSogPx0o1',
               buyerName: 'Engr. Lorenzo Bautista',
               buyerPhone: '0917-623-4490',
               depositAmount: 20000,
@@ -853,7 +1323,7 @@
             basePrice: 618000,
             status: 'Ready for Release',
             listedDaysAgo: 5,
-            sourcedByAgentId: 'agent_jester',
+            sourcedByAgentId: 'azDygyzrUab1RaYJhMnlSogPx0o1',
             finderFeeAmount: 3000,
             priorityLockUntil: null,
             soldAt: null,
@@ -917,7 +1387,7 @@
             basePrice: 1385000,
             status: 'Detailing',
             listedDaysAgo: 2,
-            sourcedByAgentId: 'agent_jester',
+            sourcedByAgentId: 'azDygyzrUab1RaYJhMnlSogPx0o1',
             finderFeeAmount: 10000,
             finderFeeAutoScaled: true,
             priorityLockUntil: null,
@@ -950,11 +1420,11 @@
             basePrice: 755000,
             status: 'Sold',
             listedDaysAgo: 18,
-            sourcedByAgentId: 'agent_jester',
+            sourcedByAgentId: 'azDygyzrUab1RaYJhMnlSogPx0o1',
             finderFeeAmount: 6000,
             priorityLockUntil: null,
             soldAt: today,
-            soldByAgentId: 'agent_jester',
+            soldByAgentId: 'azDygyzrUab1RaYJhMnlSogPx0o1',
             photos: [
               { label: 'Sold Showroom Unit', url: makeCarSamplePhoto('2021 Mitsubishi Xpander GLS (SOLD)', '#334155', '#94a3b8', 'SOLD UNIT') }
             ],
@@ -970,7 +1440,7 @@
           {
             id: 'bk_101',
             carId: 'car_montero_2021',
-            agentId: 'agent_jester',
+            agentId: 'azDygyzrUab1RaYJhMnlSogPx0o1',
             date: today,
             slot: '10:00 AM',
             buyerName: 'Engr. Paolo Villanueva',
@@ -980,7 +1450,7 @@
           {
             id: 'bk_102',
             carId: 'car_montero_2021',
-            agentId: 'agent_paul',
+            agentId: '3lEms6M9NlZ4PArsVZgy5DkuzsE3',
             date: today,
             slot: '01:30 PM',
             buyerName: 'Dra. Clarissa Lim',
@@ -990,7 +1460,7 @@
           {
             id: 'bk_103',
             carId: 'car_vios_2022',
-            agentId: 'agent_jester',
+            agentId: 'azDygyzrUab1RaYJhMnlSogPx0o1',
             date: tomorrow,
             slot: '11:00 AM',
             buyerName: 'Mark Anthony Tan',
@@ -1003,8 +1473,8 @@
             id: 'sale_901',
             carId: 'car_xpander_2021',
             carTitle: '2021 Mitsubishi Xpander GLS 1.5G AT',
-            agentId: 'agent_jester',
-            sourcedByAgentId: 'agent_jester',
+            agentId: 'azDygyzrUab1RaYJhMnlSogPx0o1',
+            sourcedByAgentId: 'azDygyzrUab1RaYJhMnlSogPx0o1',
             sourcingBonus: 6000,
             payoutModel: 'MARKUP',
             basePriceSnapshot: 755000,
@@ -1027,8 +1497,8 @@
             id: 'sale_902',
             carId: 'car_vios_2022',
             carTitle: '2022 Toyota Vios 1.3 XLE CVT',
-            agentId: 'agent_paul',
-            sourcedByAgentId: 'agent_jester',
+            agentId: '3lEms6M9NlZ4PArsVZgy5DkuzsE3',
+            sourcedByAgentId: 'azDygyzrUab1RaYJhMnlSogPx0o1',
             sourcingBonus: 3000,
             payoutModel: 'COMMISSION',
             basePriceSnapshot: 618000,
@@ -1051,7 +1521,7 @@
         leads: [
           {
             id: 'lead_501',
-            agentId: 'agent_jester',
+            agentId: 'azDygyzrUab1RaYJhMnlSogPx0o1',
             makeModel: '2019 Honda CR-V SX Diesel AWD',
             plateNo: 'NDJ-8820',
             mileage: '46,200 km',
@@ -1070,7 +1540,7 @@
           },
           {
             id: 'lead_502',
-            agentId: 'agent_paul',
+            agentId: '3lEms6M9NlZ4PArsVZgy5DkuzsE3',
             makeModel: '2020 Suzuki Jimny GLX 4AT (Two-Tone)',
             plateNo: 'NFW-9104',
             mileage: '29,500 km',
@@ -1117,6 +1587,9 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       } catch (e) {
         console.warn('Local storage save warning:', e);
+      }
+      if (typeof window.syncFirestoreNow === 'function') {
+        window.syncFirestoreNow();
       }
     }
 
@@ -1171,13 +1644,19 @@
     // =========================================================================
     function renderRoleSwitcher() {
       const switcher = document.getElementById('role-switcher');
-      if (!switcher) return;
-      const roster = Object.values(state.agents).filter(u => u.active !== false);
-      switcher.innerHTML = roster.map(u => `
-        <option value="${u.id}" ${u.id === state.currentUserId ? 'selected' : ''}>
-          ${escapeHtml(u.label)}: ${escapeHtml(u.name)}
-        </option>
-      `).join('');
+      if (switcher) {
+        const roster = Object.values(state.agents).filter(u => u.active !== false);
+        switcher.innerHTML = roster.map(u => `
+          <option value="${u.id}" ${u.id === state.currentUserId ? 'selected' : ''}>
+            ${escapeHtml(u.label)}: ${escapeHtml(u.name)}
+          </option>
+        `).join('');
+      }
+      const badgeEl = document.getElementById('active-user-label');
+      const current = getCurrentUser();
+      if (badgeEl && current) {
+        badgeEl.textContent = `${current.name} (${current.label})`;
+      }
     }
 
     function renderNavigation() {
@@ -1208,7 +1687,6 @@
         ...(leadership ? [{ id: 'settings', label: 'Settings', shortLabel: 'Settings', icon: 'settings', badge: null, badgeColor: 'bg-slate-800 text-slate-200' }] : [])
       ];
 
-      // Mobile header quick Settings icon button so Owner/Co-Owner/Admin can open Settings on phones
       const mobileSettingsBtn = document.getElementById('mobile-header-settings');
       if (mobileSettingsBtn) {
         mobileSettingsBtn.innerHTML = leadership ? `
@@ -1249,7 +1727,6 @@
         }).join('');
       }
 
-      // Mobile bottom navigation excludes 'settings' (now in top header) so the bar stays spacious
       const mobileTabs = tabs.filter(t => t.id !== 'settings');
       const mobileNav = document.getElementById('mobile-nav');
       if (mobileNav) {
@@ -1286,7 +1763,7 @@
     }
 
     // =========================================================================
-    // 6. VIEW 0: OWNER & CO-OWNER EXECUTIVE OVERVIEW (MOBILE-RESPONSIVE)
+    // 6. VIEW 0: OWNER & CO-OWNER EXECUTIVE OVERVIEW
     // =========================================================================
     function renderOwnerOverviewView() {
       const user = getCurrentUser();
@@ -1297,7 +1774,6 @@
 
       const branding = { ...DEFAULT_BRANDING, ...(state.branding || {}) };
 
-      // 1. Realized Net Profit & Verified Deposits
       const approvedSales = state.sales.filter(s => s.status === 'APPROVED');
       const realizedNetProfit = approvedSales.reduce((sum, s) => {
         const car = state.cars.find(c => c.id === s.carId);
@@ -1315,14 +1791,12 @@
         return sum;
       }, 0);
 
-      // 2. Active Capital Locked & Showroom Counts
       const unsoldCars = state.cars.filter(c => !isCarSold(c));
       const showroomCars = unsoldCars.filter(c => !isCarInPreparation(c));
       const prepCars = unsoldCars.filter(c => isCarInPreparation(c));
       const activeCapitalLocked = unsoldCars.reduce((sum, c) => sum + getCarTotalInvested(c), 0);
       const projectedShowroomFloor = showroomCars.reduce((sum, c) => sum + (Number(c.basePrice) || 0), 0);
 
-      // 3. Action Required Queue (Unverified Expenses, Pending Deposit Proofs, Pending Sale Approvals)
       const actionItems = [];
 
       state.cars.forEach(car => {
@@ -1374,7 +1848,6 @@
         }
       });
 
-      // 4. Partner Agent & Scout ROI Attribution
       const teamAttribution = Object.values(state.agents).map(agent => {
         const sourcedCarsList = state.cars.filter(c => c.sourcedByAgentId === agent.id);
         const sourcedActive = sourcedCarsList.filter(c => !isCarSold(c)).length;
@@ -1416,7 +1889,6 @@
       }).sort((a, b) => (b.netProfitContributed + b.grossVolume) - (a.netProfitContributed + a.grossVolume));
 
       return `
-        <!-- Executive Header Card -->
         <div class="rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white p-4 sm:p-6 border border-slate-800 shadow-lg mb-5">
           <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
             <div class="space-y-2 min-w-0">
@@ -1444,7 +1916,6 @@
               </p>
             </div>
 
-            <!-- Action & Quick-Switch Buttons (Responsive on 360px+ Mobile) -->
             <div class="w-full xl:w-auto flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 pt-1 xl:pt-0">
               <button
                 type="button"
@@ -1481,7 +1952,6 @@
           </div>
         </div>
 
-        <!-- Capital & True Net Profit Pulse (4 High-Signal Executive KPI Cards) -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
           <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/90 shadow-xs">
             <div class="flex items-start justify-between gap-1.5">
@@ -1536,7 +2006,6 @@
           </div>
         </div>
 
-        <!-- Action Required — Pending Sign-Offs & Reviews -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden mb-6">
           <div class="px-4 sm:px-5 py-3.5 bg-amber-50/80 border-b border-amber-200/80 flex items-center justify-between gap-2">
             <div class="flex items-center gap-2 min-w-0">
@@ -1588,7 +2057,6 @@
           `}
         </div>
 
-        <!-- Partner Agent & Scout ROI Attribution -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
           <div class="px-4 sm:px-5 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
             <div>
@@ -1904,7 +2372,6 @@
       });
 
       return `
-        <!-- Top KPI Strip -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
           <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/80 shadow-xs">
             <div class="flex items-center justify-between text-slate-500 text-xs font-semibold">
@@ -1947,7 +2414,6 @@
           </div>
         </div>
 
-        <!-- Filter & Search Bar -->
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5">
           <div class="flex items-center gap-1.5 overflow-x-auto pb-1">
             ${[
@@ -1997,7 +2463,6 @@
           </div>
         </div>
 
-        <!-- Showroom Vehicle Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           ${filteredCars.map(car => {
             const carBookingsToday = state.bookings.filter(b => b.carId === car.id && b.date === today && b.status === 'CONFIRMED');
@@ -2016,7 +2481,6 @@
 
             return `
               <div class="bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition flex flex-col overflow-hidden">
-                <!-- Photo Header -->
                 <div class="relative h-44 bg-slate-900 overflow-hidden group">
                   <img
                     src="${primaryPhoto.url}"
@@ -2080,7 +2544,6 @@
                   </div>
                 </div>
 
-                <!-- Card Body -->
                 <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
                   <div class="space-y-2.5">
                     <div class="grid grid-cols-3 gap-1.5 text-[11px] text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-100">
@@ -2214,7 +2677,6 @@
                     ` : ''}
                   </div>
 
-                  <!-- Action Footer -->
                   ${isCarSold(car) ? (() => {
                     const saleRecord = state.sales.find(s => s.carId === car.id);
                     const sellerUser = getUserRecord(car.soldByAgentId || saleRecord?.agentId);
@@ -2956,11 +3418,9 @@
             <p class="text-xs text-slate-500 mt-0.5">Manage dealership logo &amp; branding, finder's fee tiers, team roles, partner invite tokens, and AutoBook support.</p>
           </div>
 
-          <!-- Brand, Logo Upload & Theme Form -->
           <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-xs">
             <h3 class="text-sm font-extrabold text-slate-900 mb-3">Dealership Logo, Brand Identity &amp; Accent Color</h3>
             <form onsubmit="submitBrandingSettings(event)" class="space-y-4">
-              <!-- Logo Replacement Control -->
               <div class="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div class="flex items-center gap-3.5 min-w-0">
                   <div class="w-14 h-14 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
@@ -3028,7 +3488,6 @@
             </form>
           </div>
 
-          <!-- Commission & Tiered Finder's Fee Schedule Form -->
           <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-xs">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
               <div>
@@ -3081,7 +3540,6 @@
                 </div>
               </div>
 
-              <!-- Tiered Brackets -->
               <div id="settings-tiered-fields" class="${cfg.mode === 'FLAT' ? 'hidden' : ''} p-4 rounded-2xl bg-indigo-50/60 border border-indigo-200 space-y-3">
                 <div class="flex items-center justify-between">
                   <span class="text-[11px] font-extrabold uppercase tracking-wider text-indigo-950">Tiered Price Brackets (PHP)</span>
@@ -3127,7 +3585,6 @@
                 </div>
               </div>
 
-              <!-- Flat Rate Option -->
               <div id="settings-flat-fields" class="${cfg.mode === 'FLAT' ? '' : 'hidden'} p-4 rounded-2xl bg-indigo-50/60 border border-indigo-200">
                 <div class="max-w-xs">
                   <label class="block text-xs font-bold text-slate-700 mb-1">Flat Finder's Fee per Acquired Car (PHP)</label>
@@ -3143,7 +3600,6 @@
             </form>
           </div>
 
-          <!-- Team Roster, Invite Link Generator & Role Ladder -->
           <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-xs space-y-4">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
@@ -3222,7 +3678,7 @@
 
             <div class="divide-y divide-slate-100">
               ${roster.map(member => {
-                const isFounder = Boolean(member.isFounder || member.id === 'owner_rv');
+                const isFounder = Boolean(member.isFounder || member.id === 'D63cjfBNjZX0GfdcbSo23s9zpap1');
                 return `
                   <div class="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
@@ -3230,7 +3686,7 @@
                         <span class="text-xs font-extrabold text-slate-900">${escapeHtml(member.name)}</span>
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-800">${escapeHtml(member.label)}</span>
                       </div>
-                      <p class="text-[11px] text-slate-500">${escapeHtml(member.phone || '0917-000-0000')}</p>
+                      <p class="text-[11px] text-slate-500">${escapeHtml(member.email || '')} ${member.phone ? '&bull; ' + escapeHtml(member.phone) : ''}</p>
                     </div>
                     ${!isFounder && execOwner ? `
                       <div class="flex flex-wrap gap-1.5">
@@ -3245,7 +3701,6 @@
             </div>
           </div>
 
-          <!-- AutoBook Support & Reset -->
           <div class="bg-slate-900 text-white rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400">AutoBook Direct Support Desk</span>
@@ -3783,59 +4238,40 @@
         const isValid = Boolean(invite && invite.status === 'ACTIVE');
 
         root.innerHTML = `
-          <div class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200">
-              <div class="bg-slate-950 text-white px-5 py-4 flex items-center justify-between gap-3">
-                <div class="flex items-center gap-2.5 min-w-0">
-                  ${branding.logoDataUrl ? `<img src="${branding.logoDataUrl}" alt="${escapeHtml(branding.dealershipName)}" class="w-9 h-9 rounded-xl object-contain bg-white p-0.5 shrink-0" />` : ''}
-                  <div class="min-w-0">
-                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 block">Partner Agent Invitation</span>
-                    <h3 class="text-base font-extrabold truncate">${escapeHtml(branding.dealershipName)}</h3>
-                  </div>
+          <div class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200">
+              <div class="flex items-center justify-between mb-3">
+                <div>
+                  <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700">${escapeHtml(branding.dealershipName)} Partner Onboarding</span>
+                  <h3 class="text-lg font-extrabold text-slate-900">Join Dealership Team</h3>
                 </div>
-                <button type="button" onclick="closeModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <button type="button" onclick="closeModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
               </div>
-
               ${!isValid ? `
-                <div class="p-6 text-center space-y-3">
-                  <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
-                    <i data-lucide="link-2-off" class="w-6 h-6"></i>
-                  </div>
-                  <h4 class="text-base font-extrabold text-slate-900">Invitation Link Invalid or Already Used</h4>
-                  <p class="text-xs text-slate-500 leading-relaxed">
-                    This single-use onboarding link has already been claimed or revoked. Ask the dealership Owner or Admin to generate a fresh invite link.
-                  </p>
-                  <button type="button" onclick="closeModal()" class="w-full py-2.5 rounded-xl bg-slate-900 text-white text-xs font-extrabold">Close</button>
+                <div class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 space-y-2">
+                  <p class="font-extrabold">Invite link is invalid, expired, or already used.</p>
+                  <p>Token checked: <span class="font-mono font-bold">${escapeHtml(token || 'MISSING')}</span></p>
+                </div>
+                <div class="flex justify-end pt-4">
+                  <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 text-white">Close</button>
                 </div>
               ` : `
-                <form onsubmit="submitAcceptInvite(event, '${escapeJsAttr(invite.token)}')" class="p-5 sm:p-6 space-y-4">
-                  <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs">
-                    <span class="text-emerald-900 font-semibold">Invite Token: <strong class="font-mono">${escapeHtml(invite.token)}</strong></span>
-                    <span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-extrabold">Partner Agent</span>
+                <form onsubmit="submitAcceptInvite(event, '${escapeJsAttr(invite.token)}')" class="space-y-3.5">
+                  <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950">
+                    <p class="font-extrabold">Verified Invite Token: <span class="font-mono">${escapeHtml(invite.token)}</span></p>
+                    <p class="text-[11px] text-emerald-800 mt-0.5">Role assigned: <strong>Partner Agent</strong></p>
                   </div>
-
                   <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Your Full Name</label>
-                    <input type="text" name="agentName" required value="${escapeHtml(invite.note)}" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-bold" />
+                    <input type="text" name="fullName" required value="${escapeHtml(invite.note.split(' - ')[0] || '')}" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm font-bold" />
                   </div>
-
                   <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Mobile / Viber Number</label>
-                    <input type="text" name="agentPhone" required placeholder="0917-XXX-XXXX" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm" />
+                    <input type="text" name="phone" required placeholder="0917-XXX-XXXX" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm" />
                   </div>
-
-                  <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 space-y-1">
-                    <p class="font-extrabold text-slate-800">What you'll get access to at ${escapeHtml(branding.dealershipName)}:</p>
-                    <p>&bull; Live showroom inventory &amp; conflict-free buyer viewing slots</p>
-                    <p>&bull; Off-market car sourcing with 48h priority locks &amp; Finder's Fees</p>
-                    <p>&bull; Private personal sales &amp; commission/Patong payout tracking</p>
-                  </div>
-
-                  <div class="flex justify-end gap-2 pt-1">
+                  <div class="flex justify-end gap-2 pt-2">
                     <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600">Cancel</button>
-                    <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-extrabold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm">
-                      Accept Invite &amp; Enter Showroom
-                    </button>
+                    <button type="submit" class="px-4 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white">Activate Agent Account</button>
                   </div>
                 </form>
               `}
@@ -3857,202 +4293,190 @@
     }
 
     // =========================================================================
-    // 14. INTERACTIVE ACTIONS & MUTATIONS
+    // 14. EVENT HANDLERS & WORKFLOW MUTATIONS
     // =========================================================================
-    function setStatusFilter(val) {
-      state.statusFilter = val;
-      saveState();
-      renderApp();
-    }
-
-    function setSearchQuery(val) {
-      state.searchQuery = val;
-      renderApp();
-    }
-
-    function setCalendarCar(carId) {
-      state.calendarCarId = carId;
-      saveState();
-      renderApp();
-    }
-
-    function setCalendarDate(dateStr) {
-      state.calendarDateFilter = dateStr;
-      saveState();
-      renderApp();
-    }
-
-    function openCalendarForCar(carId) {
-      state.calendarCarId = carId;
-      state.activeTab = 'calendar';
-      saveState();
-      renderApp();
-    }
-
-    function toggleSoldModelFields(val) {
-      const m = document.getElementById('markup-fields');
-      const c = document.getElementById('commission-fields');
-      if (!m || !c) return;
-      m.classList.toggle('hidden', val === 'COMMISSION');
-      c.classList.toggle('hidden', val !== 'COMMISSION');
-      if (val === 'COMMISSION') updateCommissionPreviewAmount();
-    }
-
-    function updateCommissionPreviewAmount() {
-      const form = document.getElementById('sold-form');
-      const previewEl = document.getElementById('commission-payout-amount');
-      if (!form || !previewEl) return;
-      const salePrice = Number(form.reportedSalePrice?.value) || 0;
-      const rate = Number(state.commissionRate) || 2.0;
-      const commAmount = Math.round(salePrice * (rate / 100));
-      previewEl.textContent = formatPHP(commAmount);
-    }
+    function setStatusFilter(val) { state.statusFilter = val; saveState(); renderApp(); }
+    function setSearchQuery(val) { state.searchQuery = val; renderApp(); }
+    function setCalendarCar(carId) { state.calendarCarId = carId; saveState(); renderApp(); }
+    function setCalendarDate(dateStr) { state.calendarDateFilter = dateStr; saveState(); renderApp(); }
+    function openCalendarForCar(carId) { state.calendarCarId = carId; state.activeTab = 'calendar'; saveState(); renderApp(); }
 
     function updateBookViewingSlotOptions(carId, selectedDate) {
       const slotSelect = document.getElementById('book-viewing-slot-select');
-      const errorBox = document.getElementById('book-viewing-error');
-      if (errorBox) errorBox.classList.add('hidden');
       if (!slotSelect) return;
-
       const takenSlots = (state.bookings || [])
         .filter(b => b.carId === carId && b.date === selectedDate && b.status === 'CONFIRMED')
         .map(b => b.slot);
-      const firstOpenSlot = TIME_SLOTS.find(s => !takenSlots.includes(s)) || TIME_SLOTS[0];
+      const currentVal = slotSelect.value;
+      const nextValid = (!currentVal || takenSlots.includes(currentVal))
+        ? (TIME_SLOTS.find(s => !takenSlots.includes(s)) || TIME_SLOTS[0])
+        : currentVal;
 
       slotSelect.innerHTML = TIME_SLOTS.map(s => {
         const isTaken = takenSlots.includes(s);
-        return `<option value="${s}" ${s === firstOpenSlot ? 'selected' : ''} ${isTaken ? 'disabled' : ''}>${s}${isTaken ? ' (Booked)' : ''}</option>`;
+        return `<option value="${s}" ${s === nextValid ? 'selected' : ''} ${isTaken ? 'disabled' : ''}>${s}${isTaken ? ' (Booked)' : ''}</option>`;
       }).join('');
     }
 
     function submitBookViewing(event, carId) {
       event.preventDefault();
+      const form = event.target;
       const user = getCurrentUser();
       const car = state.cars.find(c => c.id === carId);
       if (!car || !isCarBookable(car)) return;
-      const form = event.target;
+
       const date = form.date.value;
       const slot = form.slot.value;
       const buyerName = form.buyerName.value.trim();
       const buyerPhone = form.buyerPhone.value.trim();
 
-      if (!Array.isArray(state.bookings)) state.bookings = [];
       const conflict = state.bookings.find(b => b.carId === carId && b.date === date && b.slot === slot && b.status === 'CONFIRMED');
       if (conflict) {
-        const msg = `${slot} on ${formatDisplayDate(date)} is already locked by ${getUserRecord(conflict.agentId).name}.`;
-        const errorBox = document.getElementById('book-viewing-error');
-        if (errorBox) {
-          errorBox.textContent = msg;
-          errorBox.classList.remove('hidden');
+        const errEl = document.getElementById('book-viewing-error');
+        if (errEl) {
+          errEl.textContent = `Slot Conflict! ${getUserRecord(conflict.agentId)?.name || 'Another agent'} already locked ${slot}.`;
+          errEl.classList.remove('hidden');
         }
-        emitLiveEvent('Slot Conflict Blocked', msg, 'rose');
         return;
       }
 
-      state.bookings.push({ id: 'bk_' + Date.now(), carId, agentId: user.id, date, slot, buyerName, buyerPhone, status: 'CONFIRMED' });
+      state.bookings.push({
+        id: 'bk_' + Date.now(),
+        carId,
+        agentId: user.id,
+        date,
+        slot,
+        buyerName,
+        buyerPhone,
+        status: 'CONFIRMED'
+      });
+
       if (car.status === 'Ready for Release') car.status = 'Under Viewing';
-      state.calendarCarId = carId;
-      state.calendarDateFilter = date;
       saveState();
       closeModal();
       renderApp();
-      emitLiveEvent('Viewing Locked', `${user.name} locked ${car.year} ${car.make} ${car.model} at ${slot}.`, 'emerald');
+      emitLiveEvent('Viewing Locked', `${user.name} locked ${slot} (${formatDisplayDate(date)}) for ${car.year} ${car.make} ${car.model}.`, 'emerald');
     }
 
     function cancelBooking(bookingId) {
-      state.bookings = state.bookings.filter(b => b.id !== bookingId);
+      const idx = state.bookings.findIndex(b => b.id === bookingId);
+      if (idx === -1) return;
+      const bk = state.bookings[idx];
+      state.bookings.splice(idx, 1);
+      const car = state.cars.find(c => c.id === bk.carId);
+      if (car && car.status === 'Under Viewing' && !car.reservation && !state.bookings.some(b => b.carId === car.id && b.status === 'CONFIRMED')) {
+        car.status = 'Ready for Release';
+      }
       saveState();
       renderApp();
-      emitLiveEvent('Slot Released', 'Viewing time slot reopened for all agents.', 'amber');
+      emitLiveEvent('Slot Released', `${bk.slot} viewing slot opened back up.`, 'amber');
     }
 
     function submitReserveCar(event, carId) {
       event.preventDefault();
+      const form = event.target;
       const user = getCurrentUser();
       const car = state.cars.find(c => c.id === carId);
-      if (!car) return;
-      const form = event.target;
+      if (!car || isCarSold(car) || isCarFullyLockedByReservation(car)) return;
+
       const referenceNo = normalizePaymentRef(form.referenceNo.value);
-      const dup = findDuplicatePaymentReference(referenceNo, car.id);
+      const dup = findDuplicatePaymentReference(referenceNo, carId);
       if (dup) {
-        checkLiveReferenceDuplicate(form.referenceNo, 'reserve-ref-feedback', car.id);
-        emitLiveEvent('Duplicate Receipt Blocked', `Ref #${referenceNo} already used on ${dup.unit}.`, 'rose');
+        emitLiveEvent('Duplicate Reference Blocked', `Ref #${referenceNo} was already used on ${dup.unit}.`, 'rose');
         return;
       }
 
-      const cleared = isLeadership(user);
-      if (cleared) car.status = 'Reserved';
+      const depositAmount = Math.max(1, Number(form.depositAmount.value) || 0);
+      const paymentChannel = form.paymentChannel.value;
+      const buyerName = form.buyerName.value.trim();
+      const receiptProof = form.receiptProof?.value || generateCanvasReceiptPNG(paymentChannel, referenceNo, depositAmount, buyerName);
+
       car.reservation = {
         agentId: user.id,
-        buyerName: form.buyerName.value.trim(),
+        buyerName,
         buyerPhone: form.buyerPhone.value.trim(),
-        depositAmount: Number(form.depositAmount.value) || 20000,
-        paymentChannel: form.paymentChannel.value,
+        depositAmount,
+        paymentChannel,
         referenceNo,
-        receiptProof: form.receiptProof.value || '',
-        paymentVerified: cleared,
-        verifiedBy: cleared ? user.name : null,
-        verifiedAt: cleared ? 'Just now' : null
+        receiptProof,
+        paymentVerified: false,
+        verifiedBy: null,
+        verifiedAt: null
       };
+      if (car.status === 'Ready for Release') car.status = 'Under Viewing';
 
       saveState();
       closeModal();
       renderApp();
-      emitLiveEvent(
-        cleared ? 'Reserved & Locked' : 'Deposit Proof Submitted',
-        `${car.year} ${car.make} ${car.model} deposit logged (Ref #${referenceNo}).`,
-        cleared ? 'rose' : 'amber'
-      );
+      emitLiveEvent('Deposit Proof Submitted', `${user.name} logged ${formatPHP(depositAmount)} (${paymentChannel} #${referenceNo}) on ${car.year} ${car.make} ${car.model}.`, 'indigo');
     }
 
     function releaseReservation(carId) {
       const car = state.cars.find(c => c.id === carId);
       if (!car) return;
       car.reservation = null;
-      car.status = 'Ready for Release';
+      if (!isCarSold(car)) {
+        car.status = state.bookings.some(b => b.carId === car.id && b.status === 'CONFIRMED') ? 'Under Viewing' : 'Ready for Release';
+      }
       saveState();
       renderApp();
-      emitLiveEvent('Hold Released', `${car.year} ${car.make} ${car.model} returned to showroom availability.`, 'amber');
+      emitLiveEvent('Reservation Released', `${car.year} ${car.make} ${car.model} is back on open showroom status.`, 'amber');
+    }
+
+    function toggleSoldModelFields(model) {
+      document.getElementById('markup-fields')?.classList.toggle('hidden', model !== 'MARKUP');
+      document.getElementById('commission-fields')?.classList.toggle('hidden', model !== 'COMMISSION');
+      if (model === 'COMMISSION') updateCommissionPreviewAmount();
+    }
+
+    function updateCommissionPreviewAmount() {
+      const form = document.getElementById('sold-form');
+      const previewEl = document.getElementById('commission-payout-amount');
+      if (!form || !previewEl) return;
+      const price = Math.max(0, Number(form.reportedSalePrice?.value) || 0);
+      const rate = Number(state.commissionRate) || 2.0;
+      previewEl.textContent = formatPHP(Math.round(price * (rate / 100)));
     }
 
     function submitMarkSold(event, carId) {
       event.preventDefault();
+      const form = event.target;
       const currentUser = getCurrentUser();
       const car = state.cars.find(c => c.id === carId);
       if (!car || !canUserMarkCarSold(car, currentUser)) return;
-      const form = event.target;
+
       const referenceNo = normalizePaymentRef(form.referenceNo.value);
-      const dup = findDuplicatePaymentReference(referenceNo, car.id);
+      const dup = findDuplicatePaymentReference(referenceNo, carId);
       if (dup) {
-        checkLiveReferenceDuplicate(form.referenceNo, 'sold-ref-feedback', car.id);
-        emitLiveEvent('Duplicate Reference Blocked', `Ref #${referenceNo} already used on ${dup.unit}.`, 'rose');
+        emitLiveEvent('Duplicate Reference Blocked', `Ref #${referenceNo} is already on ${dup.unit}.`, 'rose');
         return;
       }
 
-      const agentId = isLeadership(currentUser) ? form.agentId.value : currentUser.id;
+      const agentId = form.agentId.value;
       const payoutModel = form.payoutModel.value;
-      let agentPayout = 0;
-      let dealershipNet = car.basePrice;
-      let agentMarkup = 0;
-      let reportedSalePrice = null;
-      let commissionRateApplied = null;
+      const paymentChannel = form.paymentChannel.value;
+      const notes = form.notes.value.trim() || 'Deal closed & verified';
+      const unitCostSnapshot = getCarTotalInvested(car);
 
+      let reportedSalePrice = null, agentMarkup = 0, commissionRateApplied = null, agentPayout = 0, dealershipNet = car.basePrice;
       if (payoutModel === 'MARKUP') {
         agentMarkup = Math.max(0, Number(form.agentMarkup.value) || 0);
         agentPayout = agentMarkup;
+        dealershipNet = car.basePrice;
       } else {
-        reportedSalePrice = Number(form.reportedSalePrice.value) || car.basePrice;
+        reportedSalePrice = Math.max(1, Number(form.reportedSalePrice.value) || car.basePrice);
         commissionRateApplied = Number(state.commissionRate) || 2.0;
         agentPayout = Math.round(reportedSalePrice * (commissionRateApplied / 100));
         dealershipNet = reportedSalePrice - agentPayout;
       }
 
-      const sourcingBonus = car.sourcedByAgentId ? (car.finderFeeAmount || computeFinderFeeForPrice(car.basePrice)) : 0;
-      const autoApproved = isLeadership(currentUser);
+      const sourcingBonus = car.sourcedByAgentId ? (Number(car.finderFeeAmount) || computeFinderFeeForPrice(reportedSalePrice || car.basePrice)) : 0;
+      const receiptProof = form.receiptProof?.value || generateCanvasReceiptPNG(paymentChannel, referenceNo, reportedSalePrice || (car.basePrice + agentMarkup), getUserRecord(agentId)?.name);
 
       car.status = 'Sold';
-      car.soldAt = getDateOffsetStr(0);
+      car.soldAt = formatDisplayDate(getDateOffsetStr(0));
       car.soldByAgentId = agentId;
+      car.reservation = null;
 
       state.sales.unshift({
         id: 'sale_' + Date.now(),
@@ -4063,26 +4487,26 @@
         sourcingBonus,
         payoutModel,
         basePriceSnapshot: car.basePrice,
-        unitCostSnapshot: getCarTotalInvested(car),
+        unitCostSnapshot,
         reportedSalePrice,
         agentMarkup,
         commissionRateApplied,
         agentPayout,
         dealershipNet,
-        paymentChannel: form.paymentChannel.value,
+        paymentChannel,
         referenceNo,
-        receiptProof: form.receiptProof.value || '',
-        paymentVerified: autoApproved,
-        verifiedBy: autoApproved ? currentUser.name : null,
-        status: autoApproved ? 'APPROVED' : 'PENDING',
+        receiptProof,
+        paymentVerified: false,
+        verifiedBy: null,
+        status: 'PENDING',
         date: getDateOffsetStr(0),
-        notes: form.notes.value.trim()
+        notes
       });
 
       saveState();
       closeModal();
       renderApp();
-      emitLiveEvent('Vehicle Marked Sold', `${car.year} ${car.make} ${car.model} closed by ${getUserRecord(agentId).name}.`, 'emerald');
+      emitLiveEvent('Vehicle Sold', `${car.year} ${car.make} ${car.model} marked SOLD by ${getUserRecord(agentId)?.name}.`, 'emerald');
     }
 
     function approveSalePayout(saleId) {
@@ -4093,69 +4517,15 @@
       sale.verifiedBy = getCurrentUser().name;
       saveState();
       renderApp();
-      emitLiveEvent('Payout Approved', `${sale.carTitle} (${formatPHP(sale.agentPayout)}) approved.`, 'emerald');
+      emitLiveEvent('Payout Approved', `${formatPHP(sale.agentPayout)} approved for ${getUserRecord(sale.agentId)?.name}.`, 'emerald');
     }
 
     function updateCommissionRate(val) {
-      state.commissionRate = Math.min(3.0, Math.max(1.0, Number(val) || 2.0));
+      const num = parseFloat(val);
+      if (isNaN(num) || num < 0.5 || num > 15) return;
+      state.commissionRate = num;
       saveState();
       renderApp();
-    }
-
-    function submitInlineReconExpense(event, carId) {
-      event.preventDefault();
-      const car = state.cars.find(c => c.id === carId);
-      if (!car) return;
-      const form = event.target;
-      const amount = Math.max(0, Number(form.amount.value) || 0);
-      if (!amount) return;
-      if (!Array.isArray(car.reconExpenses)) car.reconExpenses = [];
-      car.reconExpenses.push({
-        id: 'rec_' + Date.now(),
-        category: form.category.value,
-        note: form.note.value.trim(),
-        amount,
-        verified: false,
-        addedAt: 'Just now'
-      });
-      recalculateCarBasePrice(car);
-      saveState();
-      renderApp();
-      emitLiveEvent('Recon Expense Added', `+${formatPHP(amount)} added to ${car.make} ${car.model} (flagged for Owner verification).`, 'amber');
-    }
-
-    function submitModalReconExpense(event, carId) {
-      submitInlineReconExpense(event, carId);
-      openModal('car-recon', { carId });
-    }
-
-    function deleteReconExpense(carId, expId, reopen = false) {
-      const car = state.cars.find(c => c.id === carId);
-      if (!car) return;
-      car.reconExpenses = (car.reconExpenses || []).filter(e => e.id !== expId);
-      recalculateCarBasePrice(car);
-      saveState();
-      renderApp();
-      if (reopen) openModal('car-recon', { carId });
-    }
-
-    function updateCarMarginInline(carId, val) {
-      const car = state.cars.find(c => c.id === carId);
-      if (!car) return;
-      car.targetMargin = Math.max(0, Number(val) || 0);
-      recalculateCarBasePrice(car);
-      saveState();
-      renderApp();
-    }
-
-    function advanceCarPrepStage(carId) {
-      const car = state.cars.find(c => c.id === carId);
-      const next = getNextPrepStageLabel(car);
-      if (!car || !next) return;
-      car.status = next;
-      saveState();
-      renderApp();
-      emitLiveEvent('Prep Stage Updated', `${car.year} ${car.make} ${car.model} moved to "${next}".`, 'emerald');
     }
 
     function submitAddCar(event) {
@@ -4163,9 +4533,9 @@
       const form = event.target;
       const acquisitionPrice = Math.max(0, Number(form.acquisitionPrice.value) || 0);
       const targetMargin = Math.max(0, Number(form.targetMargin.value) || 0);
-      const year = Number(form.year.value) || 2021;
       const make = form.make.value.trim();
       const model = form.model.value.trim();
+      const year = Number(form.year.value) || 2021;
       const status = form.status.value;
 
       const newCar = {
@@ -4188,42 +4558,106 @@
         priorityLockUntil: null,
         soldAt: null,
         soldByAgentId: null,
-        photos: [{ label: 'Intake Photo', url: makeCarSamplePhoto(`${year} ${make} ${model}`, '#065f46', '#34d399', 'NEW INTAKE') }],
-        checklist: { orcr_docs: true, no_lto_alarm: true, open_deed_ids: true, not_flooded: true, no_major_accident: true, odo_not_tampered: true, cold_ac_engine: true, fresh_paint_interior: true, spare_jack_keys: true },
+        photos: [{ label: 'Unit Intake Photo', url: makeCarSamplePhoto(`${year} ${make} ${model}`, '#065f46', '#34d399', status.toUpperCase()) }],
+        checklist: {
+          orcr_docs: true, no_lto_alarm: true, open_deed_ids: true,
+          not_flooded: true, no_major_accident: true, odo_not_tampered: true,
+          cold_ac_engine: true, fresh_paint_interior: false, spare_jack_keys: true
+        },
         reservation: null
       };
 
       state.cars.unshift(newCar);
-      if (isCarInPreparation(newCar)) state.activeTab = 'prep';
       saveState();
       closeModal();
       renderApp();
-      emitLiveEvent('Unit Intaken', `${year} ${make} ${model} added to "${status}".`, 'emerald');
+      emitLiveEvent('Vehicle Intaked', `${year} ${make} ${model} added to ${status}.`, 'emerald');
+    }
+
+    function advanceCarPrepStage(carId) {
+      const car = state.cars.find(c => c.id === carId);
+      if (!car) return;
+      const nextStage = getNextPrepStageLabel(car);
+      if (!nextStage) return;
+      car.status = nextStage;
+      recalculateCarBasePrice(car);
+      saveState();
+      renderApp();
+      emitLiveEvent('Prep Stage Updated', `${car.year} ${car.make} ${car.model} moved to ${nextStage}.`, 'emerald');
+    }
+
+    function updateCarMarginInline(carId, val) {
+      const car = state.cars.find(c => c.id === carId);
+      if (!car) return;
+      car.targetMargin = Math.max(0, Number(val) || 0);
+      recalculateCarBasePrice(car);
+      saveState();
+      renderApp();
+    }
+
+    function submitInlineReconExpense(event, carId) {
+      event.preventDefault();
+      const form = event.target;
+      const car = state.cars.find(c => c.id === carId);
+      if (!car) return;
+      const amount = Math.max(1, Number(form.amount.value) || 0);
+      if (!Array.isArray(car.reconExpenses)) car.reconExpenses = [];
+      car.reconExpenses.unshift({
+        id: 'rec_' + Date.now(),
+        category: form.category.value,
+        note: form.note.value.trim(),
+        amount,
+        verified: false,
+        addedAt: 'Just now'
+      });
+      recalculateCarBasePrice(car);
+      saveState();
+      renderApp();
+      emitLiveEvent('Recon Added', `+${formatPHP(amount)} (${form.category.value}) added to ${car.year} ${car.make} ${car.model}.`, 'amber');
+    }
+
+    function submitModalReconExpense(event, carId) {
+      submitInlineReconExpense(event, carId);
+      openModal('car-recon', { carId });
+    }
+
+    function deleteReconExpense(carId, expId, reopenModal = false) {
+      const car = state.cars.find(c => c.id === carId);
+      if (!car || !Array.isArray(car.reconExpenses)) return;
+      car.reconExpenses = car.reconExpenses.filter(e => e.id !== expId);
+      recalculateCarBasePrice(car);
+      saveState();
+      renderApp();
+      if (reopenModal) openModal('car-recon', { carId });
     }
 
     function submitNewLead(event) {
       event.preventDefault();
-      const user = getCurrentUser();
       const form = event.target;
+      const user = getCurrentUser();
       state.leads.unshift({
         id: 'lead_' + Date.now(),
         agentId: user.id,
         makeModel: form.makeModel.value.trim(),
         plateNo: form.plateNo.value.trim().toUpperCase(),
         mileage: form.mileage.value.trim(),
-        askingPrice: Number(form.askingPrice.value) || 0,
+        askingPrice: Math.max(1, Number(form.askingPrice.value) || 0),
         sellerName: form.sellerName.value.trim(),
         sellerPhone: form.sellerPhone.value.trim(),
         location: form.location.value.trim(),
         notes: form.notes.value.trim(),
-        checklist: { orcr_docs: true, no_lto_alarm: true, open_deed_ids: true, not_flooded: true, no_major_accident: true, odo_not_tampered: true, cold_ac_engine: true, fresh_paint_interior: true, spare_jack_keys: true },
+        checklist: {
+          orcr_docs: true, no_lto_alarm: true, open_deed_ids: true,
+          not_flooded: true, no_major_accident: true, odo_not_tampered: true,
+          cold_ac_engine: true, fresh_paint_interior: true, spare_jack_keys: true
+        },
         status: 'PENDING',
         submittedAt: 'Just now'
       });
       saveState();
       closeModal();
       renderApp();
-      emitLiveEvent('Lead Submitted', `${user.name} submitted ${form.makeModel.value.trim()}.`, 'indigo');
+      emitLiveEvent('Seller Lead Submitted', `${user.name} submitted ${form.makeModel.value.trim()}.`, 'indigo');
     }
 
     function updateLeadStatus(leadId, status) {
@@ -4236,71 +4670,71 @@
 
     function acquireLeadIntoInventory(leadId) {
       const lead = state.leads.find(l => l.id === leadId);
-      if (!lead) return;
+      if (!lead || lead.status === 'ACQUIRED') return;
       lead.status = 'ACQUIRED';
-      const parts = lead.makeModel.split(' ');
-      const year = Number(parts[0]) || 2020;
-      const make = parts[1] || 'Unit';
-      const model = parts.slice(2).join(' ') || lead.makeModel;
-      const finderFee = computeFinderFeeForPrice(lead.askingPrice);
 
-      state.cars.unshift({
+      const finderFee = computeFinderFeeForPrice(lead.askingPrice);
+      const marginBuffer = 45000;
+      const newCar = {
         id: 'car_' + Date.now(),
-        make,
-        model,
-        year,
+        make: lead.makeModel.split(' ')[1] || 'Sourced',
+        model: lead.makeModel,
+        year: parseInt(lead.makeModel, 10) || 2021,
         plateNo: lead.plateNo,
         mileage: lead.mileage,
-        fuel: 'Gasoline',
-        color: 'Showroom Spec',
+        fuel: 'Diesel',
+        color: 'Verified Unit',
         acquisitionPrice: lead.askingPrice,
-        targetMargin: 45000,
+        targetMargin: marginBuffer,
         reconExpenses: [],
-        basePrice: lead.askingPrice + 45000,
+        basePrice: lead.askingPrice + marginBuffer,
         status: 'Reconditioning / PMS',
         listedDaysAgo: 0,
         sourcedByAgentId: lead.agentId,
         finderFeeAmount: finderFee,
-        priorityLockUntil: Date.now() + 48 * 3600 * 1000,
+        priorityLockUntil: Date.now() + 48 * 60 * 60 * 1000,
         soldAt: null,
         soldByAgentId: null,
-        photos: [{ label: 'Acquired Unit', url: makeCarSamplePhoto(lead.makeModel, '#065f46', '#34d399', 'SCOUT ACQUIRED') }],
+        photos: [{ label: 'Sourced Intake', url: makeCarSamplePhoto(lead.makeModel, '#312e81', '#a5b4fc', `48H LOCK • ${formatPHP(finderFee)} FEE`) }],
         checklist: { ...(lead.checklist || {}) },
         reservation: null
-      });
-      state.activeTab = 'prep';
+      };
+
+      state.cars.unshift(newCar);
       saveState();
       renderApp();
-      emitLiveEvent('Lead Acquired', `${lead.makeModel} moved to Under Prep with ${formatPHP(finderFee)} Finder's Fee.`, 'emerald');
+      emitLiveEvent('Lead Acquired!', `${lead.makeModel} moved to Under Prep with 48h lock & ${formatPHP(finderFee)} scout fee.`, 'emerald');
     }
 
     function toggleChecklistItem(targetType, targetId, itemId, checked) {
-      const target = targetType === 'lead' ? state.leads.find(l => l.id === targetId) : state.cars.find(c => c.id === targetId);
+      const target = targetType === 'lead'
+        ? state.leads.find(l => l.id === targetId)
+        : state.cars.find(c => c.id === targetId);
       if (!target) return;
       if (!target.checklist) target.checklist = {};
       target.checklist[itemId] = checked;
       saveState();
       renderApp();
-      openModal('checklist-modal', { targetType, targetId });
     }
 
     async function submitAddCarPhoto(event, carId) {
       event.preventDefault();
+      const form = event.target;
       const car = state.cars.find(c => c.id === carId);
-      const file = event.target.photoFile.files[0];
+      const file = form.photoFile?.files?.[0];
       if (!car || !file) return;
-      const url = await compressImageFile(file);
+      const url = await compressImageFile(file, 960, 0.8);
       if (!Array.isArray(car.photos)) car.photos = [];
-      car.photos.push({ label: event.target.label.value.trim(), url });
+      car.photos.push({ label: form.label.value.trim() || 'Vehicle Photo', url });
       saveState();
       renderApp();
       openModal('edit-car-images', { carId });
     }
 
-    function removeCarPhoto(carId, idx) {
+    function removeCarPhoto(carId, index) {
       const car = state.cars.find(c => c.id === carId);
-      if (!car || car.photos.length <= 1) return;
-      car.photos.splice(idx, 1);
+      if (!car || !Array.isArray(car.photos) || car.photos.length <= 1) return;
+      car.photos.splice(index, 1);
       saveState();
       renderApp();
       openModal('edit-car-images', { carId });
@@ -4311,250 +4745,190 @@
       if (!file) return;
       try {
         const logoDataUrl = await processLogoImageFile(file, 256);
-        state.branding = {
-          ...DEFAULT_BRANDING,
-          ...(state.branding || {}),
-          logoDataUrl
-        };
+        state.branding = { ...(state.branding || DEFAULT_BRANDING), logoDataUrl };
         saveState();
+        applyBrandingToDocument(state.branding);
         renderApp();
-        emitLiveEvent('Logo Updated', `Applied custom logo for ${state.branding.dealershipName}.`, 'emerald');
-      } catch (e) {
-        emitLiveEvent('Logo Upload Failed', 'Please choose a valid PNG, JPG, WebP, or SVG image.', 'rose');
+        emitLiveEvent('Dealership Logo Updated', 'New logo applied across header, overview & receipts.', 'emerald');
+      } catch (err) {
+        emitLiveEvent('Logo Upload Error', 'Please choose a valid PNG, JPG, WebP, or SVG image.', 'rose');
       }
     }
 
     function clearSettingsLogo() {
-      state.branding = {
-        ...DEFAULT_BRANDING,
-        ...(state.branding || {}),
-        logoDataUrl: null
-      };
+      state.branding = { ...(state.branding || DEFAULT_BRANDING), logoDataUrl: null };
       saveState();
+      applyBrandingToDocument(state.branding);
       renderApp();
-      emitLiveEvent('Default Logo Restored', 'Reverted to default dealership emblem.', 'amber');
+      emitLiveEvent('Default Logo Restored', 'Reverted to default AutoBook dealership mark.', 'amber');
     }
 
     function submitBrandingSettings(event) {
       event.preventDefault();
       const form = event.target;
-      const logoVal = form.logoDataUrl ? form.logoDataUrl.value.trim() : (state.branding?.logoDataUrl || '');
+      const currentBranding = { ...DEFAULT_BRANDING, ...(state.branding || {}) };
       state.branding = {
-        ...state.branding,
         dealershipName: form.dealershipName.value.trim() || DEFAULT_BRANDING.dealershipName,
         tagline: form.tagline.value.trim() || DEFAULT_BRANDING.tagline,
         accentColor: normalizeHexColor(form.accentColor.value),
-        logoDataUrl: logoVal || null
+        logoDataUrl: form.logoDataUrl?.value || currentBranding.logoDataUrl || null
       };
       saveState();
+      applyBrandingToDocument(state.branding);
       renderApp();
-      emitLiveEvent('Brand Saved', `Updated ${state.branding.dealershipName} branding & theme.`, 'emerald');
+      emitLiveEvent('Brand Settings Saved', `${state.branding.dealershipName} branding updated.`, 'emerald');
     }
 
     function toggleSettingsIncentiveModeFields(mode) {
       const tieredBox = document.getElementById('settings-tiered-fields');
       const flatBox = document.getElementById('settings-flat-fields');
-      if (!tieredBox || !flatBox) return;
-      tieredBox.classList.toggle('hidden', mode === 'FLAT');
-      flatBox.classList.toggle('hidden', mode !== 'FLAT');
+      if (tieredBox) tieredBox.classList.toggle('hidden', mode === 'FLAT');
+      if (flatBox) flatBox.classList.toggle('hidden', mode !== 'FLAT');
     }
 
     function submitCompensationSettings(event) {
       event.preventDefault();
       const form = event.target;
-      const rate = Math.min(10.0, Math.max(1.0, Number(form.commissionRate.value) || 2.0));
+      const nextComm = parseFloat(form.commissionRate.value);
+      if (!isNaN(nextComm) && nextComm >= 0.5 && nextComm <= 25) {
+        state.commissionRate = nextComm;
+      }
+
+      const prevCfg = state.sourcingIncentive || getDefaultSourcingIncentiveConfig();
       const enabled = form.incentiveEnabled.value === 'true';
       const mode = form.incentiveMode.value === 'FLAT' ? 'FLAT' : 'TIERED';
-      const tier1Max = Math.max(100000, Number(form.tier1Max.value) || 650000);
-      const tier2Max = Math.max(tier1Max + 50000, Number(form.tier2Max.value) || 1200000);
 
-      state.commissionRate = rate;
+      const tier1Max = Math.max(1000, Number(form.tier1Max?.value) || prevCfg.tier1Max || 650000);
+      const tier2Max = Math.max(tier1Max + 1000, Number(form.tier2Max?.value) || prevCfg.tier2Max || 1200000);
+
       state.sourcingIncentive = {
+        ...prevCfg,
         enabled,
         mode,
-        flatAmount: Math.max(0, Number(form.flatAmount.value) || 0),
+        flatAmount: Math.max(0, Number(form.flatAmount?.value) || prevCfg.flatAmount || 5000),
         tier1Max,
-        tier1Amount: Math.max(0, Number(form.tier1Amount.value) || 0),
+        tier1Amount: Math.max(0, Number(form.tier1Amount?.value) || 0),
         tier2Max,
-        tier2Amount: Math.max(0, Number(form.tier2Amount.value) || 0),
-        tier3Amount: Math.max(0, Number(form.tier3Amount.value) || 0)
+        tier2Amount: Math.max(0, Number(form.tier2Amount?.value) || 0),
+        tier3Amount: Math.max(0, Number(form.tier3Amount?.value) || 0)
       };
+
+      state.cars.forEach(car => {
+        if (car.sourcedByAgentId && !isCarSold(car)) {
+          car.finderFeeAmount = computeFinderFeeForPrice(car.basePrice, state.sourcingIncentive);
+        }
+      });
 
       saveState();
       renderApp();
-      emitLiveEvent(
-        'Incentive Rules Updated',
-        `Comm: ${rate.toFixed(1)}% • ${getFinderFeeSummaryLabel()}`,
-        'indigo'
-      );
+      emitLiveEvent('Compensation Rules Saved', `Comm: ${Number(state.commissionRate).toFixed(1)}% • ${getFinderFeeSummaryLabel()}.`, 'indigo');
     }
 
     function submitCreateInvite(event) {
       event.preventDefault();
-      const note = event.target.note.value.trim();
+      const form = event.target;
+      const note = form.note.value.trim();
+      if (!note) return;
       const token = 'AB-' + Math.random().toString(36).substring(2, 8).toUpperCase();
       if (!Array.isArray(state.invites)) state.invites = [];
       state.invites.unshift({ token, note, status: 'ACTIVE', createdAt: 'Just now', usedByName: null });
+      form.reset();
       saveState();
       renderApp();
-      emitLiveEvent('Invite Link Ready', `Copyable onboarding link generated for ${note}.`, 'indigo');
+      emitLiveEvent('Invite Link Ready', `Shareable link generated for ${note} (${token}).`, 'indigo');
     }
 
     function revokeInviteToken(token) {
-      state.invites = (state.invites || []).filter(i => i.token !== token);
+      const inv = (state.invites || []).find(i => i.token === token);
+      if (!inv) return;
+      inv.status = 'REVOKED';
       saveState();
       renderApp();
-      emitLiveEvent('Invite Revoked', `Invite token ${token} has been removed.`, 'amber');
     }
 
     function submitAcceptInvite(event, token) {
       event.preventDefault();
-      const normalizedToken = String(token || '').trim().toUpperCase();
-      const invite = (state.invites || []).find(i => String(i.token || '').toUpperCase() === normalizedToken && i.status === 'ACTIVE');
-      if (!invite) {
-        closeModal();
-        emitLiveEvent('Invite Invalid', 'This invite link was already claimed or revoked.', 'rose');
-        return;
-      }
-
       const form = event.target;
-      const agentName = form.agentName.value.trim() || invite.note;
-      const agentPhone = form.agentPhone.value.trim() || '0917-000-0000';
+      const inv = (state.invites || []).find(i => String(i.token || '').toUpperCase() === String(token || '').toUpperCase() && i.status === 'ACTIVE');
+      if (!inv) return;
+      const fullName = form.fullName.value.trim();
+      const phone = form.phone.value.trim();
       const newAgentId = 'agent_' + Date.now();
-
-      state.agents[newAgentId] = {
-        id: newAgentId,
-        name: agentName,
-        tier: 'AGENT',
-        label: 'Agent',
-        phone: agentPhone,
-        active: true,
-        joinedAt: 'Just now'
-      };
-
-      invite.status = 'USED';
-      invite.usedByName = agentName;
+      state.agents[newAgentId] = { id: newAgentId, name: fullName, tier: 'AGENT', label: 'Agent', phone, active: true, joinedAt: 'Today' };
+      inv.status = 'USED';
+      inv.usedByName = fullName;
       state.currentUserId = newAgentId;
       state.activeTab = 'inventory';
-
-      if (window.history && window.history.replaceState && window.location.search.includes('invite=')) {
-        const cleanUrl = window.location.href.split('?')[0];
-        window.history.replaceState({}, document.title, cleanUrl);
-      }
-
       saveState();
       closeModal();
       renderApp();
-      emitLiveEvent('Partner Agent Onboarded!', `Welcome to ${state.branding?.dealershipName || DEFAULT_BRANDING.dealershipName}, ${agentName}!`, 'emerald');
-    }
-
-    function checkInviteUrlParamOnBoot() {
-      try {
-        const params = new URLSearchParams(window.location.search);
-        const inviteToken = params.get('invite');
-        if (inviteToken) {
-          openModal('accept-invite', { token: inviteToken });
-        }
-      } catch (e) {
-        // Ignore query parsing in restricted frames
-      }
+      emitLiveEvent('Agent Onboarded', `${fullName} joined ${state.branding.dealershipName}.`, 'emerald');
     }
 
     function setTeamMemberRole(memberId, newTier) {
+      if (!isExecutiveOwner(getCurrentUser())) return;
       const member = state.agents[memberId];
-      if (!member) return;
+      if (!member || member.isFounder || member.id === 'D63cjfBNjZX0GfdcbSo23s9zpap1') return;
+      const labels = { AGENT: 'Agent', ADMIN: 'Admin', CO_OWNER: 'Co-owner' };
       member.tier = newTier;
-      member.label = newTier === 'CO_OWNER' ? 'Co-owner' : newTier === 'ADMIN' ? 'Admin' : 'Agent';
+      member.label = labels[newTier] || 'Agent';
       saveState();
       renderApp();
       emitLiveEvent('Role Updated', `${member.name} is now ${member.label}.`, 'indigo');
     }
 
     function exportExecutiveSnapshotCSV() {
-      const rows = [
-        ['Vehicle', 'Plate', 'Stage', 'Buy-In', 'Recon', 'Floor Price', 'Status'],
-        ...state.cars.map(c => [
-          `${c.year} ${c.make} ${c.model}`,
-          c.plateNo,
-          c.status,
-          getCarAcquisitionCost(c),
-          getCarReconTotal(c),
-          c.basePrice,
-          c.status
-        ])
-      ];
-      const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const rows = [['Type', 'Unit / Deal', 'Agent / Scout', 'Channel & Ref', 'Amount (PHP)', 'Status']];
+      state.sales.forEach(s => {
+        rows.push(['SALE', s.carTitle, getUserRecord(s.agentId)?.name || '', `${s.paymentChannel || ''} #${s.referenceNo || ''}`, s.agentPayout, s.status]);
+      });
+      state.cars.filter(c => !isCarSold(c)).forEach(c => {
+        rows.push(['STOCK', `${c.year} ${c.make} ${c.model}`, getUserRecord(c.sourcedByAgentId)?.name || 'Dealership', c.plateNo, c.basePrice, c.status]);
+      });
+      const csv = rows.map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Magief_Cars_Snapshot_${getDateOffsetStr(0)}.csv`;
-      document.body.appendChild(a);
+      a.download = `magief-cars-executive-snapshot-${getDateOffsetStr(0)}.csv`;
       a.click();
-      document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      emitLiveEvent('CSV Exported', 'Executive snapshot downloaded.', 'emerald');
+      emitLiveEvent('Executive CSV Exported', 'Downloaded Magief Cars snapshot.', 'emerald');
     }
 
     function resetDemoWorkspace() {
       localStorage.removeItem(STORAGE_KEY);
       state = createDefaultState();
       saveState();
+      applyBrandingToDocument(state.branding);
       renderApp();
-      emitLiveEvent('Workspace Reset', 'Restored clean Magief Cars default data.', 'amber');
+      emitLiveEvent('Workspace Reset', 'Restored clean Magief Cars sample data.', 'emerald');
     }
 
     // =========================================================================
-    // 15. MAIN RENDER ORCHESTRATOR
+    // 15. MASTER RENDER PIPELINE & INITIALIZATION
     // =========================================================================
     function renderApp() {
       applyBrandingToDocument(state.branding);
       renderRoleSwitcher();
       renderNavigation();
 
-      const main = document.getElementById('app-content');
-      if (!main) return;
+      const mainEl = document.getElementById('app-content');
+      if (!mainEl) return;
 
-      if (state.activeTab === 'overview') {
-        main.innerHTML = renderOwnerOverviewView();
-      } else if (state.activeTab === 'inventory') {
-        main.innerHTML = renderInventoryView();
-      } else if (state.activeTab === 'prep') {
-        main.innerHTML = renderUnderPrepView();
-      } else if (state.activeTab === 'calendar') {
-        main.innerHTML = renderCalendarView();
-      } else if (state.activeTab === 'sourcing') {
-        main.innerHTML = renderSourcingView();
-      } else if (state.activeTab === 'sales') {
-        main.innerHTML = renderSalesView();
-      } else if (state.activeTab === 'settings') {
-        main.innerHTML = renderSettingsView();
-      } else {
-        main.innerHTML = renderInventoryView();
-      }
+      if (state.activeTab === 'overview') mainEl.innerHTML = renderOwnerOverviewView();
+      else if (state.activeTab === 'prep') mainEl.innerHTML = renderUnderPrepView();
+      else if (state.activeTab === 'calendar') mainEl.innerHTML = renderCalendarView();
+      else if (state.activeTab === 'sourcing') mainEl.innerHTML = renderSourcingView();
+      else if (state.activeTab === 'sales') mainEl.innerHTML = renderSalesView();
+      else if (state.activeTab === 'settings') mainEl.innerHTML = renderSettingsView();
+      else mainEl.innerHTML = renderInventoryView();
 
       if (window.lucide) lucide.createIcons();
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const switcher = document.getElementById('role-switcher');
-      if (switcher) {
-        switcher.addEventListener('change', e => {
-          state.currentUserId = e.target.value;
-          const newUser = getCurrentUser();
-          if (isExecutiveOwner(newUser)) {
-            state.activeTab = 'overview';
-          } else if (state.activeTab === 'overview' || (!isLeadership(newUser) && (state.activeTab === 'prep' || state.activeTab === 'settings'))) {
-            state.activeTab = 'inventory';
-          }
-          saveState();
-          renderApp();
-          emitLiveEvent('Role Switched', `Active user: ${newUser.name} (${newUser.label}).`, 'indigo');
-        });
-      }
-      renderApp();
-      checkInviteUrlParamOnBoot();
-    });
+    applyBrandingToDocument(state.branding);
+    renderApp();
   </script>
 </body>
 </html>
