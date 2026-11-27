@@ -2945,6 +2945,7 @@
 
       const execOwner = isExecutiveOwner(user);
       const branding = { ...DEFAULT_BRANDING, ...(state.branding || {}) };
+      const cfg = state.sourcingIncentive || getDefaultSourcingIncentiveConfig();
       const roster = Object.values(state.agents);
       const invitesList = Array.isArray(state.invites) ? state.invites : [];
 
@@ -2952,7 +2953,7 @@
         <div class="space-y-6">
           <div>
             <h2 class="text-xl font-extrabold text-slate-900">Dealership Settings &amp; White-Label Control</h2>
-            <p class="text-xs text-slate-500 mt-0.5">Manage dealership logo &amp; branding, team roles, partner invite tokens, and AutoBook support.</p>
+            <p class="text-xs text-slate-500 mt-0.5">Manage dealership logo &amp; branding, finder's fee tiers, team roles, partner invite tokens, and AutoBook support.</p>
           </div>
 
           <!-- Brand, Logo Upload & Theme Form -->
@@ -3022,6 +3023,121 @@
               <div class="flex justify-end">
                 <button type="submit" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold">
                   Save Brand Settings
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Commission & Tiered Finder's Fee Schedule Form -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-xs">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+              <div>
+                <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                  <i data-lucide="gift" class="w-4 h-4 text-indigo-600"></i>
+                  <span>Commission &amp; Tiered Finder's Fee Schedule</span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">Configure the default sales commission percentage and off-market car sourcing incentives.</p>
+              </div>
+              <span class="self-start sm:self-auto px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-indigo-50 text-indigo-800 border border-indigo-200">
+                ${escapeHtml(getFinderFeeSummaryLabel())}
+              </span>
+            </div>
+
+            <form onsubmit="submitCompensationSettings(event)" class="space-y-4">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Default Closing Commission (%)</label>
+                  <input
+                    type="number"
+                    name="commissionRate"
+                    step="0.5"
+                    min="1.0"
+                    max="10.0"
+                    required
+                    value="${Number(state.commissionRate).toFixed(1)}"
+                    class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm font-extrabold text-slate-900"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Sourcing Finder's Fee Status</label>
+                  <select
+                    name="incentiveEnabled"
+                    class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 bg-white h-[38px]"
+                  >
+                    <option value="true" ${cfg.enabled ? 'selected' : ''}>Enabled (Active Scout Payouts)</option>
+                    <option value="false" ${!cfg.enabled ? 'selected' : ''}>Disabled (No Scout Bonus)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Incentive Calculation Mode</label>
+                  <select
+                    name="incentiveMode"
+                    onchange="toggleSettingsIncentiveModeFields(this.value)"
+                    class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 bg-white h-[38px]"
+                  >
+                    <option value="TIERED" ${cfg.mode === 'TIERED' ? 'selected' : ''}>Tiered by Vehicle Price (3 Brackets)</option>
+                    <option value="FLAT" ${cfg.mode === 'FLAT' ? 'selected' : ''}>Flat Rate per Acquired Car</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Tiered Brackets -->
+              <div id="settings-tiered-fields" class="${cfg.mode === 'FLAT' ? 'hidden' : ''} p-4 rounded-2xl bg-indigo-50/60 border border-indigo-200 space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] font-extrabold uppercase tracking-wider text-indigo-950">Tiered Price Brackets (PHP)</span>
+                  <span class="text-[11px] font-semibold text-indigo-700">Auto-calculated when leads are acquired</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div class="bg-white p-3 rounded-xl border border-indigo-200/80 space-y-2">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 block">Tier 1 &bull; Economy / Compact</span>
+                    <div>
+                      <label class="block text-[11px] font-semibold text-slate-500 mb-0.5">Vehicle Price Below (PHP)</label>
+                      <input type="number" name="tier1Max" min="1" step="any" required value="${Number(cfg.tier1Max) || 650000}" class="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-bold" />
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-semibold text-slate-500 mb-0.5">Finder's Fee Payout (PHP)</label>
+                      <input type="number" name="tier1Amount" min="0" step="any" required value="${Number(cfg.tier1Amount) || 3000}" class="w-full px-3 py-1.5 border border-emerald-300 bg-emerald-50/40 rounded-lg text-xs font-extrabold text-emerald-800" />
+                    </div>
+                  </div>
+
+                  <div class="bg-white p-3 rounded-xl border border-indigo-200/80 space-y-2">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 block">Tier 2 &bull; Mid-Range / MPV / Crossover</span>
+                    <div>
+                      <label class="block text-[11px] font-semibold text-slate-500 mb-0.5">Vehicle Price Below (PHP)</label>
+                      <input type="number" name="tier2Max" min="1" step="any" required value="${Number(cfg.tier2Max) || 1200000}" class="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-bold" />
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-semibold text-slate-500 mb-0.5">Finder's Fee Payout (PHP)</label>
+                      <input type="number" name="tier2Amount" min="0" step="any" required value="${Number(cfg.tier2Amount) || 6000}" class="w-full px-3 py-1.5 border border-emerald-300 bg-emerald-50/40 rounded-lg text-xs font-extrabold text-emerald-800" />
+                    </div>
+                  </div>
+
+                  <div class="bg-white p-3 rounded-xl border border-indigo-200/80 space-y-2">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 block">Tier 3 &bull; SUV / Pick-up / Luxury</span>
+                    <div>
+                      <label class="block text-[11px] font-semibold text-slate-500 mb-0.5">Vehicle Price Threshold</label>
+                      <input type="text" readonly value="Tier 2 Max & Above" class="w-full px-3 py-1.5 border border-slate-200 bg-slate-50 rounded-lg text-xs font-semibold text-slate-500" />
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-semibold text-slate-500 mb-0.5">Finder's Fee Payout (PHP)</label>
+                      <input type="number" name="tier3Amount" min="0" step="any" required value="${Number(cfg.tier3Amount) || 10000}" class="w-full px-3 py-1.5 border border-emerald-300 bg-emerald-50/40 rounded-lg text-xs font-extrabold text-emerald-800" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Flat Rate Option -->
+              <div id="settings-flat-fields" class="${cfg.mode === 'FLAT' ? '' : 'hidden'} p-4 rounded-2xl bg-indigo-50/60 border border-indigo-200">
+                <div class="max-w-xs">
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Flat Finder's Fee per Acquired Car (PHP)</label>
+                  <input type="number" name="flatAmount" min="0" step="any" required value="${Number(cfg.flatAmount) || 5000}" class="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm font-extrabold text-emerald-800" />
+                </div>
+              </div>
+
+              <div class="flex justify-end">
+                <button type="submit" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold">
+                  Save Commission &amp; Finder's Fee Rules
                 </button>
               </div>
             </form>
@@ -4233,6 +4349,44 @@
       saveState();
       renderApp();
       emitLiveEvent('Brand Saved', `Updated ${state.branding.dealershipName} branding & theme.`, 'emerald');
+    }
+
+    function toggleSettingsIncentiveModeFields(mode) {
+      const tieredBox = document.getElementById('settings-tiered-fields');
+      const flatBox = document.getElementById('settings-flat-fields');
+      if (!tieredBox || !flatBox) return;
+      tieredBox.classList.toggle('hidden', mode === 'FLAT');
+      flatBox.classList.toggle('hidden', mode !== 'FLAT');
+    }
+
+    function submitCompensationSettings(event) {
+      event.preventDefault();
+      const form = event.target;
+      const rate = Math.min(10.0, Math.max(1.0, Number(form.commissionRate.value) || 2.0));
+      const enabled = form.incentiveEnabled.value === 'true';
+      const mode = form.incentiveMode.value === 'FLAT' ? 'FLAT' : 'TIERED';
+      const tier1Max = Math.max(100000, Number(form.tier1Max.value) || 650000);
+      const tier2Max = Math.max(tier1Max + 50000, Number(form.tier2Max.value) || 1200000);
+
+      state.commissionRate = rate;
+      state.sourcingIncentive = {
+        enabled,
+        mode,
+        flatAmount: Math.max(0, Number(form.flatAmount.value) || 0),
+        tier1Max,
+        tier1Amount: Math.max(0, Number(form.tier1Amount.value) || 0),
+        tier2Max,
+        tier2Amount: Math.max(0, Number(form.tier2Amount.value) || 0),
+        tier3Amount: Math.max(0, Number(form.tier3Amount.value) || 0)
+      };
+
+      saveState();
+      renderApp();
+      emitLiveEvent(
+        'Incentive Rules Updated',
+        `Comm: ${rate.toFixed(1)}% • ${getFinderFeeSummaryLabel()}`,
+        'indigo'
+      );
     }
 
     function submitCreateInvite(event) {
