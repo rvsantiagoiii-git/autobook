@@ -193,6 +193,7 @@
     // 1. CONSTANTS, ROSTER & RBAC HELPERS
     // =========================================================================
     const STORAGE_KEY = 'autobook_v2_4_magief_cars_mobile_responsive';
+    let state = null;
 
     const DEFAULT_BRANDING = {
       dealershipName: 'Magief Cars',
@@ -270,14 +271,14 @@
     }
 
     function getUserRecord(userId) {
-      if (typeof state !== 'undefined' && state && state.agents && state.agents[userId]) {
+      if (state && state.agents && state.agents[userId]) {
         return state.agents[userId];
       }
       return DEFAULT_USERS[userId] || { id: userId, name: 'Partner Agent', tier: 'AGENT', label: 'Agent', active: true };
     }
 
     function getCurrentUser() {
-      return getUserRecord(state.currentUserId) || DEFAULT_USERS.owner_rv;
+      return getUserRecord(state?.currentUserId) || DEFAULT_USERS.owner_rv;
     }
 
     function getDateOffsetStr(offsetDays = 0) {
@@ -356,7 +357,7 @@
 
       if (logoBox) {
         if (branding.logoDataUrl) {
-          logoBox.innerHTML = `<img src="${branding.logoDataUrl}" alt="${escapeHtml(branding.dealershipName)}" class="w-full h-full object-cover" />`;
+          logoBox.innerHTML = `<img src="${branding.logoDataUrl}" alt="${escapeHtml(branding.dealershipName)}" class="w-full h-full object-contain bg-white/95 p-0.5" />`;
         } else {
           logoBox.innerHTML = `
             <svg viewBox="0 0 24 24" class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -368,6 +369,45 @@
           `;
         }
       }
+
+      // Sync browser tab favicon if a custom logo is uploaded
+      let faviconLink = document.querySelector("link[rel='icon']");
+      if (branding.logoDataUrl) {
+        if (!faviconLink) {
+          faviconLink = document.createElement('link');
+          faviconLink.rel = 'icon';
+          document.head.appendChild(faviconLink);
+        }
+        faviconLink.href = branding.logoDataUrl;
+      } else if (faviconLink) {
+        faviconLink.remove();
+      }
+    }
+
+    function processLogoImageFile(file, maxSize = 256) {
+      return new Promise((resolve, reject) => {
+        if (!file || !file.type || !file.type.startsWith('image/')) {
+          reject(new Error('Invalid image file'));
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = new Image();
+          img.onload = () => {
+            const scale = Math.min(1, maxSize / Math.max(img.width || 1, img.height || 1));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, Math.round(img.width * scale));
+            canvas.height = Math.max(1, Math.round(img.height * scale));
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/png'));
+          };
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
     }
 
     function makeCarSamplePhoto(title, bgHex, accentHex, angleBadge) {
@@ -400,11 +440,13 @@
     }
 
     function generateCanvasReceiptPNG(channel, refNo, amount, buyerName) {
+      const dealershipName = (state && state.branding && state.branding.dealershipName) || DEFAULT_BRANDING.dealershipName;
+      const dealershipTagline = (state && state.branding && state.branding.tagline) || DEFAULT_BRANDING.tagline;
       const canvas = document.createElement('canvas');
       canvas.width = 520;
       canvas.height = 680;
       const ctx = canvas.getContext('2d');
-      const accent = channel === 'Maya' ? '#16a34a' : channel === 'InstaPay / Bank' ? '#2563eb' : '#0284c7';
+      const accent = channel === 'Maya' ? '#16a34a' : channel === 'InstaPay / Bank' ? '#2563eb' : channel === 'Cash' ? '#0f766e' : '#0284c7';
 
       ctx.fillStyle = '#f1f5f9';
       ctx.fillRect(0, 0, 520, 680);
@@ -425,11 +467,11 @@
       ctx.fillStyle = '#ffffff';
       ctx.font = '800 22px Inter, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(`${channel} Transfer E-Receipt`, 260, 74);
+      ctx.fillText(`${channel} Payment E-Receipt`, 260, 74);
 
       ctx.fillStyle = '#e0f2fe';
       ctx.font = '600 13px Inter, sans-serif';
-      ctx.fillText('Confirmed Incoming Transfer • Magief Cars', 260, 102);
+      ctx.fillText(`Confirmed Payment • ${dealershipName}`, 260, 102);
 
       ctx.fillStyle = '#dcfce7';
       ctx.beginPath();
@@ -448,7 +490,7 @@
 
       ctx.fillStyle = '#64748b';
       ctx.font = '700 12px Inter, sans-serif';
-      ctx.fillText('TOTAL AMOUNT SENT', 260, 236);
+      ctx.fillText('TOTAL AMOUNT RECEIVED', 260, 236);
 
       ctx.fillStyle = '#0f172a';
       ctx.font = '900 32px Inter, sans-serif';
@@ -463,8 +505,8 @@
       ctx.setLineDash([]);
 
       const rows = [
-        ['Reference Number', refNo || '9018472615394', true],
-        ['Recipient Account', 'Magief Cars Official Wallet', false],
+        ['Reference / Voucher #', refNo || '9018472615394', true],
+        ['Recipient Account', `${dealershipName} Official`, false],
         ['Sender / Buyer', buyerName || 'Verified Buyer', false],
         ['Payment Channel', channel || 'GCash', false],
         ['Timestamp', new Date().toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }), false]
@@ -496,7 +538,7 @@
       ctx.fillText('AutoBook Duplicate Reference Guard Verified', 260, 586);
       ctx.fillStyle = '#94a3b8';
       ctx.font = '500 11px Inter, sans-serif';
-      ctx.fillText('Trece Martires Cavite • Dealership Audit Trail', 260, 606);
+      ctx.fillText(`${dealershipTagline} • Dealership Audit Trail`, 260, 606);
 
       return canvas.toDataURL('image/png');
     }
@@ -527,7 +569,7 @@
     // 2. VEHICLE, COST & INCENTIVE DOMAIN HELPERS
     // =========================================================================
     function getStatusStageMeta(statusLabel) {
-      const pipeline = (typeof state !== 'undefined' && state && Array.isArray(state.statusPipeline) && state.statusPipeline.length)
+      const pipeline = (state && Array.isArray(state.statusPipeline) && state.statusPipeline.length)
         ? state.statusPipeline
         : getDefaultStatusPipeline();
       const found = pipeline.find(s => s.label.toLowerCase() === String(statusLabel || '').toLowerCase());
@@ -626,7 +668,7 @@
     }
 
     function computeFinderFeeForPrice(price, cfgInput) {
-      const cfg = cfgInput || (typeof state !== 'undefined' && state?.sourcingIncentive) || getDefaultSourcingIncentiveConfig();
+      const cfg = cfgInput || (state && state.sourcingIncentive) || getDefaultSourcingIncentiveConfig();
       if (!cfg.enabled) return 0;
       if (cfg.mode === 'FLAT') return Math.max(0, Number(cfg.flatAmount) || 0);
       const val = Number(price) || 0;
@@ -636,7 +678,7 @@
     }
 
     function getFinderFeeSummaryLabel() {
-      const cfg = state.sourcingIncentive || getDefaultSourcingIncentiveConfig();
+      const cfg = (state && state.sourcingIncentive) || getDefaultSourcingIncentiveConfig();
       if (!cfg.enabled) return "Finder's Fee: Off";
       if (cfg.mode === 'FLAT') return `Finder's Fee: ${formatPHP(cfg.flatAmount)} Flat`;
       return `Finder's Fee: ${formatPHP(cfg.tier1Amount)} – ${formatPHP(cfg.tier3Amount)}`;
@@ -1049,7 +1091,7 @@
       };
     }
 
-    let state = (() => {
+    state = (() => {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
@@ -1143,10 +1185,10 @@
       const leadership = isLeadership(user);
       const execOwner = isExecutiveOwner(user);
 
-      if (!execOwner && (state.activeTab === 'overview' || state.activeTab === 'settings')) {
+      if (!execOwner && state.activeTab === 'overview') {
         state.activeTab = 'inventory';
       }
-      if (!leadership && state.activeTab === 'prep') {
+      if (!leadership && (state.activeTab === 'prep' || state.activeTab === 'settings')) {
         state.activeTab = 'inventory';
       }
 
@@ -1163,13 +1205,13 @@
         { id: 'calendar', label: 'Viewing Calendar', shortLabel: 'Calendar', icon: 'calendar-clock', badge: bookingsCount, badgeColor: 'bg-slate-800 text-slate-200' },
         { id: 'sourcing', label: 'Car Sourcing', shortLabel: 'Sourcing', icon: 'radar', badge: activeLeadsCount || null, badgeColor: 'bg-indigo-500 text-white' },
         { id: 'sales', label: 'Sales & Payouts', shortLabel: 'Payouts', icon: 'banknote', badge: salesCount, badgeColor: 'bg-emerald-500/20 text-emerald-300' },
-        ...(execOwner ? [{ id: 'settings', label: 'Settings', shortLabel: 'Settings', icon: 'settings', badge: null, badgeColor: 'bg-slate-800 text-slate-200' }] : [])
+        ...(leadership ? [{ id: 'settings', label: 'Settings', shortLabel: 'Settings', icon: 'settings', badge: null, badgeColor: 'bg-slate-800 text-slate-200' }] : [])
       ];
 
-      // Mobile header quick Settings icon button so Owner/Co-Owner can open Settings on phones
+      // Mobile header quick Settings icon button so Owner/Co-Owner/Admin can open Settings on phones
       const mobileSettingsBtn = document.getElementById('mobile-header-settings');
       if (mobileSettingsBtn) {
-        mobileSettingsBtn.innerHTML = execOwner ? `
+        mobileSettingsBtn.innerHTML = leadership ? `
           <button
             type="button"
             onclick="switchTab('settings')"
@@ -1207,7 +1249,7 @@
         }).join('');
       }
 
-      // Mobile bottom navigation excludes 'settings' (now in top header) so the bar stays spacious (max 5-6 items)
+      // Mobile bottom navigation excludes 'settings' (now in top header) so the bar stays spacious
       const mobileTabs = tabs.filter(t => t.id !== 'settings');
       const mobileNav = document.getElementById('mobile-nav');
       if (mobileNav) {
@@ -1388,12 +1430,15 @@
                   <span>Live Operations &bull; ${escapeHtml(branding.tagline)}</span>
                 </span>
               </div>
-              <h1 class="text-xl sm:text-2xl font-black tracking-tight leading-snug flex flex-wrap items-center gap-2">
-                <span>Welcome back, ${escapeHtml(user.name)}</span>
-                <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-white/10 border border-white/15 text-amber-300 font-extrabold text-xs">
-                  ${escapeHtml(user.label)}
-                </span>
-              </h1>
+              <div class="flex items-center gap-3">
+                ${branding.logoDataUrl ? `<img src="${branding.logoDataUrl}" alt="${escapeHtml(branding.dealershipName)}" class="w-11 h-11 rounded-xl object-contain bg-white/95 p-1 border border-white/20 shrink-0" />` : ''}
+                <h1 class="text-xl sm:text-2xl font-black tracking-tight leading-snug flex flex-wrap items-center gap-2">
+                  <span>Welcome back, ${escapeHtml(user.name)}</span>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-white/10 border border-white/15 text-amber-300 font-extrabold text-xs">
+                    ${escapeHtml(user.label)}
+                  </span>
+                </h1>
+              </div>
               <p class="text-xs text-slate-300 max-w-2xl leading-relaxed">
                 One-glance executive pulse across ${escapeHtml(branding.dealershipName)} capital allocation, verified escrow deposits, net dealership margins, and pending sign-offs.
               </p>
@@ -1436,7 +1481,7 @@
           </div>
         </div>
 
-        <!-- Capital & True Net Profit Pulse (4 High-Signal Executive KPI Cards — Zero Truncation) -->
+        <!-- Capital & True Net Profit Pulse (4 High-Signal Executive KPI Cards) -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
           <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/90 shadow-xs">
             <div class="flex items-start justify-between gap-1.5">
@@ -1491,7 +1536,7 @@
           </div>
         </div>
 
-        <!-- Action Required — Pending Sign-Offs & Reviews (Mobile-Stacked Cards) -->
+        <!-- Action Required — Pending Sign-Offs & Reviews -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden mb-6">
           <div class="px-4 sm:px-5 py-3.5 bg-amber-50/80 border-b border-amber-200/80 flex items-center justify-between gap-2">
             <div class="flex items-center gap-2 min-w-0">
@@ -1543,7 +1588,7 @@
           `}
         </div>
 
-        <!-- Partner Agent & Scout ROI Attribution (Mobile Cards + Desktop Table) -->
+        <!-- Partner Agent & Scout ROI Attribution -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
           <div class="px-4 sm:px-5 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
             <div>
@@ -1553,7 +1598,6 @@
             <span class="text-[11px] font-bold text-slate-400">${teamAttribution.length} Team Members</span>
           </div>
 
-          <!-- MOBILE CARD VIEW (< 768px) — Zero Horizontal Cutoff -->
           <div class="md:hidden divide-y divide-slate-100">
             ${teamAttribution.map(member => {
               const roleBadge = member.tier === 'OWNER'
@@ -1609,7 +1653,6 @@
             }).join('')}
           </div>
 
-          <!-- DESKTOP TABLE VIEW (>= 768px) -->
           <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse">
               <thead>
@@ -1677,7 +1720,9 @@
     function canUserMarkCarSold(car, user) {
       if (!car || !user || isCarSold(car)) return false;
       if (isLeadership(user)) return true;
-      if (car.reservation) return car.reservation.agentId === user.id;
+      if (car.reservation) {
+        return car.reservation.agentId === user.id;
+      }
       return state.bookings.some(b => b.carId === car.id && b.agentId === user.id && b.status === 'CONFIRMED');
     }
 
@@ -1757,7 +1802,7 @@
       const channel = form.paymentChannel?.value || 'GCash';
       let refNo = normalizePaymentRef(form.referenceNo?.value);
       if (!refNo) {
-        refNo = (channel === 'GCash' ? '901' : channel === 'Maya' ? 'MYA' : 'IPY') + Math.floor(1000000000 + Math.random() * 9000000000);
+        refNo = (channel === 'GCash' ? '901' : channel === 'Maya' ? 'MYA' : channel === 'Cash' ? 'CSH' : 'IPY') + Math.floor(1000000000 + Math.random() * 9000000000);
         if (form.referenceNo) {
           form.referenceNo.value = refNo;
           checkLiveReferenceDuplicate(form.referenceNo, `${formPrefix}-ref-feedback`, form.dataset.carId || null);
@@ -2190,6 +2235,33 @@
                     <div class="text-center text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-xl py-2 px-3">
                       Locked under ${escapeHtml(scoutAgent?.name || 'Scout')}'s 48h Priority Window
                     </div>
+                  ` : isCarReserved(car) && canMarkSold ? `
+                    <div class="grid grid-cols-3 gap-1.5 pt-1">
+                      <button
+                        type="button"
+                        disabled
+                        class="px-2.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 bg-slate-200 text-slate-400 cursor-not-allowed"
+                      >
+                        <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i>
+                        <span>Book</span>
+                      </button>
+                      <button
+                        type="button"
+                        disabled
+                        class="px-2.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 bg-slate-200 text-slate-400 cursor-not-allowed"
+                      >
+                        <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                        <span>Reserve</span>
+                      </button>
+                      <button
+                        type="button"
+                        onclick="openModal('mark-sold', { carId: '${car.id}' })"
+                        class="px-2.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 bg-slate-900 hover:bg-slate-800 text-white shadow-xs"
+                      >
+                        <i data-lucide="badge-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+                        <span>Sold</span>
+                      </button>
+                    </div>
                   ` : `
                     <div class="grid grid-cols-3 gap-1.5 pt-1">
                       <button
@@ -2367,7 +2439,7 @@
                     <input
                       type="number"
                       min="0"
-                      step="1000"
+                      step="any"
                       value="${marginBuffer}"
                       onchange="updateCarMarginInline('${car.id}', this.value)"
                       class="w-32 px-2.5 py-1 border border-slate-300 rounded-lg text-xs font-extrabold text-right bg-white"
@@ -2379,7 +2451,7 @@
                       ${RECON_CATEGORIES.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')}
                     </select>
                     <input type="text" name="note" required placeholder="Expense note (e.g., PMS oil)" class="sm:col-span-4 px-2.5 py-2 bg-white border border-slate-200 rounded-lg text-xs" />
-                    <input type="number" name="amount" required min="100" step="100" placeholder="PHP ₱" class="sm:col-span-2 px-2.5 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold" />
+                    <input type="number" name="amount" required min="1" step="any" placeholder="PHP ₱" class="sm:col-span-2 px-2.5 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold" />
                     <button type="submit" class="sm:col-span-2 px-2.5 py-2 rounded-lg bg-slate-900 text-white text-xs font-extrabold">+ Add</button>
                   </form>
 
@@ -2827,29 +2899,109 @@
     }
 
     // =========================================================================
-    // 12. VIEW 6: DEALERSHIP SETTINGS (OWNER & CO-OWNER)
+    // 12. VIEW 6: DEALERSHIP SETTINGS (OWNER, CO-OWNER & ADMIN)
     // =========================================================================
+    function getInviteShareUrl(token) {
+      const baseUrl = (window.location.href && !window.location.href.startsWith('about:'))
+        ? window.location.href.split('?')[0].split('#')[0]
+        : 'https://autobook-blg.pages.dev/';
+      return `${baseUrl}?invite=${encodeURIComponent(token)}`;
+    }
+
+    function copyInviteLink(token, btnEl) {
+      const shareUrl = getInviteShareUrl(token);
+      const inputEl = document.getElementById(`invite-url-input-${token}`);
+      if (inputEl) {
+        inputEl.focus();
+        inputEl.select();
+      }
+      let copied = false;
+      try {
+        copied = document.execCommand('copy');
+      } catch (e) {
+        copied = false;
+      }
+      if (!copied && navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareUrl).catch(() => {});
+      }
+      if (btnEl) {
+        const originalHtml = btnEl.innerHTML;
+        btnEl.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i><span>Copied!</span>`;
+        if (window.lucide) lucide.createIcons();
+        setTimeout(() => {
+          btnEl.innerHTML = originalHtml;
+          if (window.lucide) lucide.createIcons();
+        }, 1800);
+      }
+      emitLiveEvent('Invite Link Copied', `Ready to paste in Messenger / Viber: ${shareUrl}`, 'emerald');
+    }
+
     function renderSettingsView() {
       const user = getCurrentUser();
-      if (!isExecutiveOwner(user)) {
+      if (!isLeadership(user)) {
         state.activeTab = 'inventory';
         return renderInventoryView();
       }
 
+      const execOwner = isExecutiveOwner(user);
       const branding = { ...DEFAULT_BRANDING, ...(state.branding || {}) };
       const roster = Object.values(state.agents);
+      const invitesList = Array.isArray(state.invites) ? state.invites : [];
 
       return `
         <div class="space-y-6">
           <div>
             <h2 class="text-xl font-extrabold text-slate-900">Dealership Settings &amp; White-Label Control</h2>
-            <p class="text-xs text-slate-500 mt-0.5">Manage dealership branding, team roles, partner invite tokens, and AutoBook support.</p>
+            <p class="text-xs text-slate-500 mt-0.5">Manage dealership logo &amp; branding, team roles, partner invite tokens, and AutoBook support.</p>
           </div>
 
-          <!-- Brand & Theme Form -->
+          <!-- Brand, Logo Upload & Theme Form -->
           <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-xs">
-            <h3 class="text-sm font-extrabold text-slate-900 mb-3">Brand Identity &amp; Accent Color</h3>
+            <h3 class="text-sm font-extrabold text-slate-900 mb-3">Dealership Logo, Brand Identity &amp; Accent Color</h3>
             <form onsubmit="submitBrandingSettings(event)" class="space-y-4">
+              <!-- Logo Replacement Control -->
+              <div class="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-3.5 min-w-0">
+                  <div class="w-14 h-14 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
+                    ${branding.logoDataUrl ? `
+                      <img src="${branding.logoDataUrl}" alt="${escapeHtml(branding.dealershipName)} Logo" class="w-full h-full object-contain bg-white p-1" />
+                    ` : `
+                      <svg viewBox="0 0 24 24" class="w-7 h-7 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
+                        <circle cx="7" cy="17" r="2"/>
+                        <path d="M9 17h6"/>
+                        <circle cx="17" cy="17" r="2"/>
+                      </svg>
+                    `}
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-xs font-extrabold text-slate-900">Dealership Logo</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                      Replaces the logo across the top bar, overview header, receipts, and browser tab icon (PNG, JPG, WebP, or SVG).
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 shrink-0">
+                  <label class="cursor-pointer px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold inline-flex items-center gap-1.5 transition">
+                    <i data-lucide="upload" class="w-3.5 h-3.5 text-emerald-400"></i>
+                    <span>${branding.logoDataUrl ? 'Replace Logo' : 'Upload Logo'}</span>
+                    <input type="file" accept="image/*" onchange="handleSettingsLogoUpload(this)" class="hidden" />
+                  </label>
+                  ${branding.logoDataUrl ? `
+                    <button
+                      type="button"
+                      onclick="clearSettingsLogo()"
+                      class="px-3 py-2 rounded-xl bg-white hover:bg-rose-50 text-rose-700 border border-slate-200 text-xs font-bold transition"
+                    >
+                      Reset Default
+                    </button>
+                  ` : ''}
+                </div>
+              </div>
+
+              <input type="hidden" name="logoDataUrl" value="${escapeHtml(branding.logoDataUrl || '')}" />
+
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label class="block text-xs font-bold text-slate-700 mb-1">Dealership Name</label>
@@ -2875,18 +3027,82 @@
             </form>
           </div>
 
-          <!-- Team Roster & Role Ladder -->
+          <!-- Team Roster, Invite Link Generator & Role Ladder -->
           <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-xs space-y-4">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h3 class="text-sm font-extrabold text-slate-900">Team Roster &amp; Access Tiers (${roster.length})</h3>
-                <p class="text-xs text-slate-500">Promote partners between Agent, Admin, and Co-owner.</p>
+                <p class="text-xs text-slate-500">Invite new partner agents or promote members between Agent, Admin, and Co-owner.</p>
               </div>
               <form onsubmit="submitCreateInvite(event)" class="flex gap-2">
-                <input type="text" name="note" required placeholder="New agent name..." class="px-3 py-2 border border-slate-200 rounded-xl text-xs" />
-                <button type="submit" class="px-3.5 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold shrink-0">+ Invite</button>
+                <input type="text" name="note" required placeholder="Enter agent's full name..." class="px-3 py-2 border border-slate-200 rounded-xl text-xs font-medium" />
+                <button type="submit" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shrink-0">+ Generate Link</button>
               </form>
             </div>
+
+            ${invitesList.length > 0 ? `
+              <div class="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-2.5">
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] font-extrabold uppercase tracking-wider text-indigo-950 flex items-center gap-1.5">
+                    <i data-lucide="link" class="w-3.5 h-3.5 text-indigo-600"></i>
+                    <span>Partner Agent Invite Links (${invitesList.filter(i => i.status === 'ACTIVE').length} Active)</span>
+                  </span>
+                  <span class="text-[10px] font-bold text-indigo-700">Single-use onboarding URLs</span>
+                </div>
+                <div class="space-y-2">
+                  ${invitesList.map(inv => {
+                    const isActive = inv.status === 'ACTIVE';
+                    const inviteUrl = getInviteShareUrl(inv.token);
+                    return `
+                      <div class="p-3 rounded-xl bg-white border ${isActive ? 'border-indigo-200' : 'border-slate-200 opacity-75'} space-y-2">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                          <div class="flex flex-wrap items-center gap-1.5">
+                            <span class="text-xs font-extrabold text-slate-900">${escapeHtml(inv.note)}</span>
+                            <span class="px-2 py-0.5 rounded-md font-mono text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-200">${escapeHtml(inv.token)}</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'}">
+                              ${isActive ? 'Active &bull; Ready to Copy' : `Onboarded (${escapeHtml(inv.usedByName || inv.note)})`}
+                            </span>
+                          </div>
+                          ${isActive ? `
+                            <button type="button" onclick="revokeInviteToken('${escapeJsAttr(inv.token)}')" class="text-[11px] font-bold text-rose-600 hover:underline">Revoke</button>
+                          ` : ''}
+                        </div>
+                        ${isActive ? `
+                          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                            <input
+                              id="invite-url-input-${escapeHtml(inv.token)}"
+                              type="text"
+                              readonly
+                              value="${escapeHtml(inviteUrl)}"
+                              onclick="this.select()"
+                              class="flex-1 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px] font-mono text-slate-700 focus:outline-none"
+                            />
+                            <div class="flex items-center gap-1.5 shrink-0">
+                              <button
+                                type="button"
+                                onclick="copyInviteLink('${escapeJsAttr(inv.token)}', this)"
+                                class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-extrabold inline-flex items-center justify-center gap-1 transition"
+                              >
+                                <i data-lucide="copy" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                <span>Copy Link</span>
+                              </button>
+                              <button
+                                type="button"
+                                onclick="openModal('accept-invite', { token: '${escapeJsAttr(inv.token)}' })"
+                                class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-extrabold inline-flex items-center justify-center gap-1 transition"
+                              >
+                                <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                                <span>Simulate Join</span>
+                              </button>
+                            </div>
+                          </div>
+                        ` : ''}
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            ` : ''}
 
             <div class="divide-y divide-slate-100">
               ${roster.map(member => {
@@ -2900,13 +3116,13 @@
                       </div>
                       <p class="text-[11px] text-slate-500">${escapeHtml(member.phone || '0917-000-0000')}</p>
                     </div>
-                    ${!isFounder ? `
+                    ${!isFounder && execOwner ? `
                       <div class="flex flex-wrap gap-1.5">
                         <button type="button" onclick="setTeamMemberRole('${member.id}', 'AGENT')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold border ${member.tier === 'AGENT' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-600 border-slate-200'}">Agent</button>
                         <button type="button" onclick="setTeamMemberRole('${member.id}', 'ADMIN')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold border ${member.tier === 'ADMIN' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200'}">Admin</button>
                         <button type="button" onclick="setTeamMemberRole('${member.id}', 'CO_OWNER')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold border ${member.tier === 'CO_OWNER' ? 'bg-amber-500 text-slate-950 border-amber-500' : 'bg-white text-slate-600 border-slate-200'}">Co-owner</button>
                       </div>
-                    ` : `<span class="text-[11px] font-bold text-slate-400">Primary Dealership Owner</span>`}
+                    ` : `<span class="text-[11px] font-bold text-slate-400">${isFounder ? 'Primary Dealership Owner' : 'Managed by Owner'}</span>`}
                   </div>
                 `;
               }).join('')}
@@ -2919,9 +3135,11 @@
               <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400">AutoBook Direct Support Desk</span>
               <p class="text-sm font-extrabold mt-0.5">Hotline / Viber / WhatsApp: 09166346726</p>
             </div>
-            <button type="button" onclick="resetDemoWorkspace()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold">
-              Reset Workspace Demo Data
-            </button>
+            ${execOwner ? `
+              <button type="button" onclick="resetDemoWorkspace()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold">
+                Reset Workspace Demo Data
+              </button>
+            ` : ''}
           </div>
         </div>
       `;
@@ -2938,7 +3156,11 @@
         const car = state.cars.find(c => c.id === payload.carId);
         if (!car) return;
         const defaultDate = payload.date || getDateOffsetStr(0);
-        const defaultSlot = payload.slot || '10:00 AM';
+        const takenSlots = (state.bookings || [])
+          .filter(b => b.carId === car.id && b.date === defaultDate && b.status === 'CONFIRMED')
+          .map(b => b.slot);
+        const firstOpenSlot = TIME_SLOTS.find(s => !takenSlots.includes(s)) || TIME_SLOTS[0];
+        const defaultSlot = payload.slot && !takenSlots.includes(payload.slot) ? payload.slot : firstOpenSlot;
 
         root.innerHTML = `
           <div class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -2952,7 +3174,7 @@
                 <div class="grid grid-cols-2 gap-3">
                   <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Date</label>
-                    <select name="date" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold">
+                    <select name="date" onchange="updateBookViewingSlotOptions('${car.id}', this.value)" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold">
                       ${[getDateOffsetStr(0), getDateOffsetStr(1), getDateOffsetStr(2)].map(d => `
                         <option value="${d}" ${d === defaultDate ? 'selected' : ''}>${formatDisplayDate(d)}</option>
                       `).join('')}
@@ -2960,8 +3182,11 @@
                   </div>
                   <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Time Slot</label>
-                    <select name="slot" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold">
-                      ${TIME_SLOTS.map(s => `<option value="${s}" ${s === defaultSlot ? 'selected' : ''}>${s}</option>`).join('')}
+                    <select id="book-viewing-slot-select" name="slot" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold">
+                      ${TIME_SLOTS.map(s => {
+                        const isTaken = takenSlots.includes(s);
+                        return `<option value="${s}" ${s === defaultSlot ? 'selected' : ''} ${isTaken ? 'disabled' : ''}>${s}${isTaken ? ' (Booked)' : ''}</option>`;
+                      }).join('')}
                     </select>
                   </div>
                 </div>
@@ -2973,6 +3198,7 @@
                   <label class="block text-xs font-bold text-slate-700 mb-1">Buyer Mobile</label>
                   <input type="text" name="buyerPhone" required placeholder="0917-XXX-XXXX" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm" />
                 </div>
+                <div id="book-viewing-error" class="hidden text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2"></div>
                 <div class="flex justify-end gap-2 pt-2">
                   <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600">Cancel</button>
                   <button type="submit" class="px-4 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 text-white">Confirm &amp; Lock Slot</button>
@@ -3007,7 +3233,7 @@
                 <div class="grid grid-cols-2 gap-3">
                   <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Deposit (PHP)</label>
-                    <input type="number" name="depositAmount" required min="5000" step="1000" value="20000" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm font-bold" />
+                    <input type="number" name="depositAmount" required min="1" step="any" value="20000" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm font-bold" />
                   </div>
                   <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Channel</label>
@@ -3015,17 +3241,18 @@
                       <option value="GCash">GCash</option>
                       <option value="Maya">Maya</option>
                       <option value="InstaPay / Bank">InstaPay / Bank</option>
+                      <option value="Cash">Cash</option>
                     </select>
                   </div>
                 </div>
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Transaction Reference #</label>
-                  <input type="text" name="referenceNo" required placeholder="e.g., 9018472615394" oninput="checkLiveReferenceDuplicate(this, 'reserve-ref-feedback', '${car.id}')" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm font-mono uppercase" />
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Transaction Reference / Voucher #</label>
+                  <input type="text" name="referenceNo" required placeholder="e.g., 9018472615394 or CASH-001" oninput="checkLiveReferenceDuplicate(this, 'reserve-ref-feedback', '${car.id}')" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm font-mono uppercase" />
                   <div id="reserve-ref-feedback" class="hidden"></div>
                 </div>
                 <div>
                   <div class="flex items-center justify-between mb-1">
-                    <label class="block text-xs font-bold text-slate-700">Receipt Proof</label>
+                    <label class="block text-xs font-bold text-slate-700">Receipt / Cash Photo Proof</label>
                     <button type="button" onclick="generateSampleReceiptForForm('reserve', 20000)" class="text-[11px] font-bold text-indigo-600 underline">+ Sample E-Receipt</button>
                   </div>
                   <input type="file" accept="image/*" onchange="handleReceiptFileUpload(this, 'reserve-receipt-data', 'reserve-receipt-preview')" class="w-full text-xs" />
@@ -3073,11 +3300,15 @@
                 </div>
                 <div id="markup-fields">
                   <label class="block text-xs font-bold text-slate-700 mb-1">Agent Markup / Patong (PHP)</label>
-                  <input type="number" name="agentMarkup" min="0" step="1000" value="30000" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm font-bold" />
+                  <input type="number" name="agentMarkup" min="0" step="any" value="30000" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm font-bold" />
                 </div>
                 <div id="commission-fields" class="hidden">
                   <label class="block text-xs font-bold text-slate-700 mb-1">Final Sale Price (PHP)</label>
-                  <input type="number" name="reportedSalePrice" min="100000" step="1000" value="${car.basePrice}" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm font-bold" />
+                  <input type="number" name="reportedSalePrice" min="1" step="any" value="${car.basePrice}" oninput="updateCommissionPreviewAmount()" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm font-bold" />
+                  <div class="mt-2 px-3.5 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs">
+                    <span class="font-bold text-emerald-900">Commission Payout (${Number(state.commissionRate).toFixed(1)}%):</span>
+                    <span id="commission-payout-amount" class="text-sm font-black text-emerald-700">${formatPHP(Math.round(car.basePrice * ((Number(state.commissionRate) || 2.0) / 100)))}</span>
+                  </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                   <div>
@@ -3086,17 +3317,18 @@
                       <option value="InstaPay / Bank">InstaPay / Bank / MC</option>
                       <option value="GCash">GCash</option>
                       <option value="Maya">Maya</option>
+                      <option value="Cash">Cash</option>
                     </select>
                   </div>
                   <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Reference #</label>
-                    <input type="text" name="referenceNo" required placeholder="BDO-MC-992104" oninput="checkLiveReferenceDuplicate(this, 'sold-ref-feedback', '${car.id}')" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-mono uppercase" />
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Reference / Voucher #</label>
+                    <input type="text" name="referenceNo" required placeholder="BDO-MC-992104 or CASH-001" oninput="checkLiveReferenceDuplicate(this, 'sold-ref-feedback', '${car.id}')" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-mono uppercase" />
                   </div>
                 </div>
                 <div id="sold-ref-feedback" class="hidden"></div>
                 <div>
                   <div class="flex items-center justify-between mb-1">
-                    <label class="block text-xs font-bold text-slate-700">Payment Screenshot</label>
+                    <label class="block text-xs font-bold text-slate-700">Payment / Cash Photo Proof</label>
                     <button type="button" onclick="generateSampleReceiptForForm('sold', ${car.basePrice})" class="text-[11px] font-bold text-indigo-600 underline">+ Sample Receipt</button>
                   </div>
                   <input type="file" accept="image/*" onchange="handleReceiptFileUpload(this, 'sold-receipt-data', 'sold-receipt-preview')" class="w-full text-xs" />
@@ -3178,7 +3410,7 @@
                   <select name="category" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold">
                     ${RECON_CATEGORIES.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')}
                   </select>
-                  <input type="number" name="amount" required min="100" step="100" placeholder="PHP ₱" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold" />
+                  <input type="number" name="amount" required min="1" step="any" placeholder="PHP ₱" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold" />
                 </div>
                 <div class="flex gap-2">
                   <input type="text" name="note" required placeholder="Shop / repair details" class="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs" />
@@ -3251,11 +3483,11 @@
                 <div class="grid grid-cols-2 gap-3">
                   <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Buy-In Cost (PHP)</label>
-                    <input type="number" name="acquisitionPrice" required value="950000" step="1000" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm font-bold" />
+                    <input type="number" name="acquisitionPrice" required value="950000" step="any" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm font-bold" />
                   </div>
                   <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Target Margin (PHP)</label>
-                    <input type="number" name="targetMargin" required value="45000" step="1000" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm font-bold" />
+                    <input type="number" name="targetMargin" required value="45000" step="any" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm font-bold" />
                   </div>
                 </div>
                 <div>
@@ -3300,7 +3532,7 @@
                   </div>
                   <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Asking (PHP)</label>
-                    <input type="number" name="askingPrice" required value="980000" step="5000" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold" />
+                    <input type="number" name="askingPrice" required min="1" value="980000" step="any" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold" />
                   </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
@@ -3428,6 +3660,74 @@
         `;
       }
 
+      if (modalType === 'accept-invite') {
+        const token = String(payload.token || '').trim().toUpperCase();
+        const invite = (state.invites || []).find(i => String(i.token || '').toUpperCase() === token);
+        const branding = { ...DEFAULT_BRANDING, ...(state.branding || {}) };
+        const isValid = Boolean(invite && invite.status === 'ACTIVE');
+
+        root.innerHTML = `
+          <div class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200">
+              <div class="bg-slate-950 text-white px-5 py-4 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  ${branding.logoDataUrl ? `<img src="${branding.logoDataUrl}" alt="${escapeHtml(branding.dealershipName)}" class="w-9 h-9 rounded-xl object-contain bg-white p-0.5 shrink-0" />` : ''}
+                  <div class="min-w-0">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 block">Partner Agent Invitation</span>
+                    <h3 class="text-base font-extrabold truncate">${escapeHtml(branding.dealershipName)}</h3>
+                  </div>
+                </div>
+                <button type="button" onclick="closeModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+              </div>
+
+              ${!isValid ? `
+                <div class="p-6 text-center space-y-3">
+                  <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+                    <i data-lucide="link-2-off" class="w-6 h-6"></i>
+                  </div>
+                  <h4 class="text-base font-extrabold text-slate-900">Invitation Link Invalid or Already Used</h4>
+                  <p class="text-xs text-slate-500 leading-relaxed">
+                    This single-use onboarding link has already been claimed or revoked. Ask the dealership Owner or Admin to generate a fresh invite link.
+                  </p>
+                  <button type="button" onclick="closeModal()" class="w-full py-2.5 rounded-xl bg-slate-900 text-white text-xs font-extrabold">Close</button>
+                </div>
+              ` : `
+                <form onsubmit="submitAcceptInvite(event, '${escapeJsAttr(invite.token)}')" class="p-5 sm:p-6 space-y-4">
+                  <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs">
+                    <span class="text-emerald-900 font-semibold">Invite Token: <strong class="font-mono">${escapeHtml(invite.token)}</strong></span>
+                    <span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-extrabold">Partner Agent</span>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Your Full Name</label>
+                    <input type="text" name="agentName" required value="${escapeHtml(invite.note)}" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-bold" />
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Mobile / Viber Number</label>
+                    <input type="text" name="agentPhone" required placeholder="0917-XXX-XXXX" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm" />
+                  </div>
+
+                  <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 space-y-1">
+                    <p class="font-extrabold text-slate-800">What you'll get access to at ${escapeHtml(branding.dealershipName)}:</p>
+                    <p>&bull; Live showroom inventory &amp; conflict-free buyer viewing slots</p>
+                    <p>&bull; Off-market car sourcing with 48h priority locks &amp; Finder's Fees</p>
+                    <p>&bull; Private personal sales &amp; commission/Patong payout tracking</p>
+                  </div>
+
+                  <div class="flex justify-end gap-2 pt-1">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600">Cancel</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-extrabold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm">
+                      Accept Invite &amp; Enter Showroom
+                    </button>
+                  </div>
+                </form>
+              `}
+            </div>
+          </div>
+        `;
+      }
+
       if (window.lucide) lucide.createIcons();
     }
 
@@ -3479,6 +3779,34 @@
       if (!m || !c) return;
       m.classList.toggle('hidden', val === 'COMMISSION');
       c.classList.toggle('hidden', val !== 'COMMISSION');
+      if (val === 'COMMISSION') updateCommissionPreviewAmount();
+    }
+
+    function updateCommissionPreviewAmount() {
+      const form = document.getElementById('sold-form');
+      const previewEl = document.getElementById('commission-payout-amount');
+      if (!form || !previewEl) return;
+      const salePrice = Number(form.reportedSalePrice?.value) || 0;
+      const rate = Number(state.commissionRate) || 2.0;
+      const commAmount = Math.round(salePrice * (rate / 100));
+      previewEl.textContent = formatPHP(commAmount);
+    }
+
+    function updateBookViewingSlotOptions(carId, selectedDate) {
+      const slotSelect = document.getElementById('book-viewing-slot-select');
+      const errorBox = document.getElementById('book-viewing-error');
+      if (errorBox) errorBox.classList.add('hidden');
+      if (!slotSelect) return;
+
+      const takenSlots = (state.bookings || [])
+        .filter(b => b.carId === carId && b.date === selectedDate && b.status === 'CONFIRMED')
+        .map(b => b.slot);
+      const firstOpenSlot = TIME_SLOTS.find(s => !takenSlots.includes(s)) || TIME_SLOTS[0];
+
+      slotSelect.innerHTML = TIME_SLOTS.map(s => {
+        const isTaken = takenSlots.includes(s);
+        return `<option value="${s}" ${s === firstOpenSlot ? 'selected' : ''} ${isTaken ? 'disabled' : ''}>${s}${isTaken ? ' (Booked)' : ''}</option>`;
+      }).join('');
     }
 
     function submitBookViewing(event, carId) {
@@ -3492,9 +3820,16 @@
       const buyerName = form.buyerName.value.trim();
       const buyerPhone = form.buyerPhone.value.trim();
 
+      if (!Array.isArray(state.bookings)) state.bookings = [];
       const conflict = state.bookings.find(b => b.carId === carId && b.date === date && b.slot === slot && b.status === 'CONFIRMED');
       if (conflict) {
-        emitLiveEvent('Slot Conflict Blocked', `${slot} is already locked by ${getUserRecord(conflict.agentId).name}.`, 'rose');
+        const msg = `${slot} on ${formatDisplayDate(date)} is already locked by ${getUserRecord(conflict.agentId).name}.`;
+        const errorBox = document.getElementById('book-viewing-error');
+        if (errorBox) {
+          errorBox.textContent = msg;
+          errorBox.classList.remove('hidden');
+        }
+        emitLiveEvent('Slot Conflict Blocked', msg, 'rose');
         return;
       }
 
@@ -3855,35 +4190,127 @@
       openModal('edit-car-images', { carId });
     }
 
+    async function handleSettingsLogoUpload(fileInput) {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      try {
+        const logoDataUrl = await processLogoImageFile(file, 256);
+        state.branding = {
+          ...DEFAULT_BRANDING,
+          ...(state.branding || {}),
+          logoDataUrl
+        };
+        saveState();
+        renderApp();
+        emitLiveEvent('Logo Updated', `Applied custom logo for ${state.branding.dealershipName}.`, 'emerald');
+      } catch (e) {
+        emitLiveEvent('Logo Upload Failed', 'Please choose a valid PNG, JPG, WebP, or SVG image.', 'rose');
+      }
+    }
+
+    function clearSettingsLogo() {
+      state.branding = {
+        ...DEFAULT_BRANDING,
+        ...(state.branding || {}),
+        logoDataUrl: null
+      };
+      saveState();
+      renderApp();
+      emitLiveEvent('Default Logo Restored', 'Reverted to default dealership emblem.', 'amber');
+    }
+
     function submitBrandingSettings(event) {
       event.preventDefault();
       const form = event.target;
+      const logoVal = form.logoDataUrl ? form.logoDataUrl.value.trim() : (state.branding?.logoDataUrl || '');
       state.branding = {
         ...state.branding,
         dealershipName: form.dealershipName.value.trim() || DEFAULT_BRANDING.dealershipName,
         tagline: form.tagline.value.trim() || DEFAULT_BRANDING.tagline,
-        accentColor: normalizeHexColor(form.accentColor.value)
+        accentColor: normalizeHexColor(form.accentColor.value),
+        logoDataUrl: logoVal || null
       };
       saveState();
       renderApp();
-      emitLiveEvent('Brand Saved', `Updated ${state.branding.dealershipName} theme.`, 'emerald');
+      emitLiveEvent('Brand Saved', `Updated ${state.branding.dealershipName} branding & theme.`, 'emerald');
     }
 
     function submitCreateInvite(event) {
       event.preventDefault();
       const note = event.target.note.value.trim();
       const token = 'AB-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+      if (!Array.isArray(state.invites)) state.invites = [];
       state.invites.unshift({ token, note, status: 'ACTIVE', createdAt: 'Just now', usedByName: null });
       saveState();
-      emitLiveEvent('Invite Created', `Single-use token ${token} created for ${note}.`, 'indigo');
-      event.target.reset();
+      renderApp();
+      emitLiveEvent('Invite Link Ready', `Copyable onboarding link generated for ${note}.`, 'indigo');
     }
 
-    function setTeamMemberRole(memberId, tier) {
+    function revokeInviteToken(token) {
+      state.invites = (state.invites || []).filter(i => i.token !== token);
+      saveState();
+      renderApp();
+      emitLiveEvent('Invite Revoked', `Invite token ${token} has been removed.`, 'amber');
+    }
+
+    function submitAcceptInvite(event, token) {
+      event.preventDefault();
+      const normalizedToken = String(token || '').trim().toUpperCase();
+      const invite = (state.invites || []).find(i => String(i.token || '').toUpperCase() === normalizedToken && i.status === 'ACTIVE');
+      if (!invite) {
+        closeModal();
+        emitLiveEvent('Invite Invalid', 'This invite link was already claimed or revoked.', 'rose');
+        return;
+      }
+
+      const form = event.target;
+      const agentName = form.agentName.value.trim() || invite.note;
+      const agentPhone = form.agentPhone.value.trim() || '0917-000-0000';
+      const newAgentId = 'agent_' + Date.now();
+
+      state.agents[newAgentId] = {
+        id: newAgentId,
+        name: agentName,
+        tier: 'AGENT',
+        label: 'Agent',
+        phone: agentPhone,
+        active: true,
+        joinedAt: 'Just now'
+      };
+
+      invite.status = 'USED';
+      invite.usedByName = agentName;
+      state.currentUserId = newAgentId;
+      state.activeTab = 'inventory';
+
+      if (window.history && window.history.replaceState && window.location.search.includes('invite=')) {
+        const cleanUrl = window.location.href.split('?')[0];
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+
+      saveState();
+      closeModal();
+      renderApp();
+      emitLiveEvent('Partner Agent Onboarded!', `Welcome to ${state.branding?.dealershipName || DEFAULT_BRANDING.dealershipName}, ${agentName}!`, 'emerald');
+    }
+
+    function checkInviteUrlParamOnBoot() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const inviteToken = params.get('invite');
+        if (inviteToken) {
+          openModal('accept-invite', { token: inviteToken });
+        }
+      } catch (e) {
+        // Ignore query parsing in restricted frames
+      }
+    }
+
+    function setTeamMemberRole(memberId, newTier) {
       const member = state.agents[memberId];
-      if (!member || member.isFounder) return;
-      member.tier = tier;
-      member.label = tier === 'CO_OWNER' ? 'Co-owner' : tier === 'ADMIN' ? 'Admin' : 'Agent';
+      if (!member) return;
+      member.tier = newTier;
+      member.label = newTier === 'CO_OWNER' ? 'Co-owner' : newTier === 'ADMIN' ? 'Admin' : 'Agent';
       saveState();
       renderApp();
       emitLiveEvent('Role Updated', `${member.name} is now ${member.label}.`, 'indigo');
@@ -3891,32 +4318,27 @@
 
     function exportExecutiveSnapshotCSV() {
       const rows = [
-        ['Date', 'Vehicle', 'Closer', 'Scout', 'Model', 'Floor Price', 'Unit Cost', 'Scout Fee', 'Agent Payout', 'Dealership Net', 'Status']
+        ['Vehicle', 'Plate', 'Stage', 'Buy-In', 'Recon', 'Floor Price', 'Status'],
+        ...state.cars.map(c => [
+          `${c.year} ${c.make} ${c.model}`,
+          c.plateNo,
+          c.status,
+          getCarAcquisitionCost(c),
+          getCarReconTotal(c),
+          c.basePrice,
+          c.status
+        ])
       ];
-      state.sales.forEach(s => {
-        const car = state.cars.find(c => c.id === s.carId);
-        const cost = typeof s.unitCostSnapshot === 'number' ? s.unitCostSnapshot : (car ? getCarTotalInvested(car) : s.basePriceSnapshot);
-        rows.push([
-          s.date,
-          `"${s.carTitle}"`,
-          `"${getUserRecord(s.agentId).name}"`,
-          `"${s.sourcedByAgentId ? getUserRecord(s.sourcedByAgentId).name : 'Direct'}"`,
-          s.payoutModel,
-          s.basePriceSnapshot,
-          cost,
-          s.sourcingBonus || 0,
-          s.agentPayout,
-          s.dealershipNet,
-          s.status
-        ]);
-      });
-      const csv = 'data:text/csv;charset=utf-8,' + rows.map(r => r.join(',')).join('\n');
+      const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = encodeURI(csv);
-      a.download = `Magief_Cars_Executive_Snapshot_${getDateOffsetStr(0)}.csv`;
+      a.href = url;
+      a.download = `Magief_Cars_Snapshot_${getDateOffsetStr(0)}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+      URL.revokeObjectURL(url);
       emitLiveEvent('CSV Exported', 'Executive snapshot downloaded.', 'emerald');
     }
 
@@ -3924,36 +4346,37 @@
       localStorage.removeItem(STORAGE_KEY);
       state = createDefaultState();
       saveState();
-      closeModal();
       renderApp();
-      emitLiveEvent('Workspace Reset', 'Restored default Magief Cars workspace.', 'amber');
+      emitLiveEvent('Workspace Reset', 'Restored clean Magief Cars default data.', 'amber');
     }
 
     // =========================================================================
-    // 15. MAIN RENDER LOOP & INITIALIZATION
+    // 15. MAIN RENDER ORCHESTRATOR
     // =========================================================================
     function renderApp() {
       applyBrandingToDocument(state.branding);
       renderRoleSwitcher();
       renderNavigation();
 
-      const container = document.getElementById('app-content');
-      if (!container) return;
+      const main = document.getElementById('app-content');
+      if (!main) return;
 
       if (state.activeTab === 'overview') {
-        container.innerHTML = renderOwnerOverviewView();
+        main.innerHTML = renderOwnerOverviewView();
+      } else if (state.activeTab === 'inventory') {
+        main.innerHTML = renderInventoryView();
       } else if (state.activeTab === 'prep') {
-        container.innerHTML = renderUnderPrepView();
+        main.innerHTML = renderUnderPrepView();
       } else if (state.activeTab === 'calendar') {
-        container.innerHTML = renderCalendarView();
+        main.innerHTML = renderCalendarView();
       } else if (state.activeTab === 'sourcing') {
-        container.innerHTML = renderSourcingView();
+        main.innerHTML = renderSourcingView();
       } else if (state.activeTab === 'sales') {
-        container.innerHTML = renderSalesView();
+        main.innerHTML = renderSalesView();
       } else if (state.activeTab === 'settings') {
-        container.innerHTML = renderSettingsView();
+        main.innerHTML = renderSettingsView();
       } else {
-        container.innerHTML = renderInventoryView();
+        main.innerHTML = renderInventoryView();
       }
 
       if (window.lucide) lucide.createIcons();
@@ -3964,13 +4387,19 @@
       if (switcher) {
         switcher.addEventListener('change', e => {
           state.currentUserId = e.target.value;
+          const newUser = getCurrentUser();
+          if (isExecutiveOwner(newUser)) {
+            state.activeTab = 'overview';
+          } else if (state.activeTab === 'overview' || (!isLeadership(newUser) && (state.activeTab === 'prep' || state.activeTab === 'settings'))) {
+            state.activeTab = 'inventory';
+          }
           saveState();
           renderApp();
-          const u = getCurrentUser();
-          emitLiveEvent('Switched View', `Now viewing as ${u.name} (${u.label}).`, 'indigo');
+          emitLiveEvent('Role Switched', `Active user: ${newUser.name} (${newUser.label}).`, 'indigo');
         });
       }
       renderApp();
+      checkInviteUrlParamOnBoot();
     });
   </script>
 </body>
